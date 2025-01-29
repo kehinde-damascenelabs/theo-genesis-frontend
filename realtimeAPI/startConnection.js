@@ -1,3 +1,5 @@
+import { agentPrompt } from "../src/helper_func";
+
 export async function startConnection() {
     // Fetch OpenAI ephemeral key from the backend
     const tokenResponse = await fetch("http://localhost:3000/session");
@@ -40,7 +42,7 @@ export async function startConnection() {
     // Send AI initial response
     const responseCreate = {
         type: "response.create",
-        response: { modalities: ["text", "audio"], instructions: "Hello, how can I assist you today?" },
+        response: { modalities: ["text", "audio"], instructions: agentPrompt },
     };
     dc.addEventListener("open", () => dc.send(JSON.stringify(responseCreate)));
     

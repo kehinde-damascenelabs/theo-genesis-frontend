@@ -1,149 +1,140 @@
-"use client"; // Ensures the component runs on the client side in Next.js
+"use client";
 
 import { useState, useRef } from "react";
-import { IconButton } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import MicOffIcon from '@mui/icons-material/MicOff';
 import MicIcon from '@mui/icons-material/Mic';
 import { startConnection } from "../../realtimeAPI/startConnection";
 import { stopConnection } from "../../realtimeAPI/stopConnection";
 
 const AudioWaveform = () => {
-  // State to track whether the microphone is ON or OFF
   const [isMicOn, setIsMicOn] = useState(false);
-  let connection = null; // Store AI connection reference
+  // Store connection in a ref instead of a regular variable
+  const connectionRef = useRef(null);
+  
+  const barsRef = useRef([]);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const microphoneStreamRef = useRef(null);
+  const animationIdRef = useRef(null);
 
-  // References for managing different audio-related elements
-  const barsRef = useRef([]); // Stores references to the waveform bars
-  const audioContextRef = useRef(null); // Stores the AudioContext instance
-  const analyserRef = useRef(null); // Stores the AnalyserNode for audio visualization
-  const microphoneStreamRef = useRef(null); // Stores the microphone input stream
-  const animationIdRef = useRef(null); // Stores the animation frame ID for cleanup
-
-  /**
-   * Starts the microphone and initializes audio processing.
-   * - Captures audio from the user's microphone.
-   * - Sets up an AudioContext and connects it to an AnalyserNode.
-   * - Uses animation frames to dynamically update waveform bars.
-   */
   const startMicrophone = async () => {
     try {
-      connection = await startConnection(); // Start AI connection
-      console.log("AI Connection started", connection);
+      // Store connection in the ref
+      connectionRef.current = await startConnection();
+      console.log("AI Connection started", connectionRef.current);
 
-      // Request permission to access the microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Create an AudioContext to process audio data
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       analyserRef.current = audioContextRef.current.createAnalyser();
 
-      // Connect the microphone stream to the analyser
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
       microphoneStreamRef.current = stream;
 
-      // Configure the analyser node for frequency analysis
-      analyserRef.current.fftSize = 512; // Determines how much frequency data is analyzed
+      analyserRef.current.fftSize = 512;
       const bufferLength = analyserRef.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      /**
-       * Recursively animates the waveform bars based on real-time audio input.
-       */
       const animateBars = () => {
-        // Get frequency data from the analyser
         analyserRef.current.getByteFrequencyData(dataArray);
-
-        // Adjust each bar's height based on frequency values
         barsRef.current.forEach((bar, index) => {
-          const value = dataArray[index % bufferLength]; // Get corresponding frequency value
-          const height = (value / 255) * 100 + 50; // Scale height dynamically
+          const value = dataArray[index % bufferLength];
+          const height = (value / 255) * 100 + 50;
           bar.style.height = `${height}px`;
         });
-
-        // Request the next animation frame for continuous updates
         animationIdRef.current = requestAnimationFrame(animateBars);
       };
 
-      animateBars(); // Start the waveform animation loop
-      setIsMicOn(true); // Update state to indicate microphone is active
+      animateBars();
+      setIsMicOn(true);
     } catch (err) {
       console.error("Error starting microphone and AI:", err);
+      // Clean up any partial connections on error
+      await stopMicrophone();
     }
   };
 
-  /**
-   * Stops the microphone and resets the waveform visualization.
-   * - Stops the microphone stream.
-   * - Closes the AudioContext.
-   * - Cancels the animation loop.
-   */
-  const stopMicrophone = () => {
-    if (connection) {
-      stopConnection(connection.pc); // Stop AI connection
-      connection = null;
+  const stopMicrophone = async () => {
+    // Check the ref for the connection
+    if (connectionRef.current) {
+      stopConnection(connectionRef.current);
+      connectionRef.current = null;
     }
     console.log("Microphone and AI connection stopped.");
 
     if (microphoneStreamRef.current) {
-      // Stop all tracks in the microphone stream
       microphoneStreamRef.current.getTracks().forEach((track) => track.stop());
-
-      // Close the audio context if it exists
-      if (audioContextRef.current) audioContextRef.current.close();
-
-      // Stop the animation loop
+    }
+    
+    if (audioContextRef.current) {
+      await audioContextRef.current.close();
+    }
+    
+    if (animationIdRef.current) {
       cancelAnimationFrame(animationIdRef.current);
+      animationIdRef.current = null;
     }
 
-    // Reset all waveform bars to their default height
-    barsRef.current.forEach((bar) => (bar.style.height = "50px"));
+    if (barsRef.current) {
+      barsRef.current.forEach((bar) => {
+        if (bar) bar.style.height = "50px";
+      });
+    }
 
-    setIsMicOn(false); // Update state to indicate microphone is off
+    setIsMicOn(false);
   };
 
-  /**
-   * Toggles the microphone on and off.
-   * - If the microphone is off, start it.
-   * - If the microphone is on, stop it.
-   */
   const toggleMicrophone = () => {
     isMicOn ? stopMicrophone() : startMicrophone();
   };
 
+  // Rest of the component remains the same
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
-      {/* Wrapper for waveform and microphone button */}
-      <div className="relative flex flex-col items-center">
-        
-        {/* Waveform Visualization */}
-        <div className="flex gap-2 items-end mb-12">
+      <div className="relative w-full max-w-md h-64">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 flex gap-1 items-end">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              ref={(el) => (barsRef.current[i] = el)} // Assign each bar a reference
+              ref={(el) => (barsRef.current[i] = el)}
               className={`w-10 h-[50px] rounded-lg transition-all ease-out ${
-                // Assign different colors to each bar for a visual effect
                 ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
               }`}
             ></div>
           ))}
         </div>
 
-        {/* Microphone Toggle Button (positioned below the waveform) */}
-        <IconButton
-          onClick={toggleMicrophone}
-          className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all mt-auto"
+        <Tooltip
+          title={
+            <div className="text-center">
+              <strong>{isMicOn ? "Turn off microphone" : "Turn on microphone"}</strong>
+              <br />
+            </div>
+          }
+          arrow
+          placement="bottom"
         >
-          {/* Change button icon based on microphone state */}
-          {isMicOn ? <MicIcon className="text-white text-4xl" /> : <MicOffIcon className="text-white text-4xl" />}
-        </IconButton>
+          <div className="absolute top-52 left-1/2 -translate-x-1/2">
+            <IconButton
+              onClick={toggleMicrophone}
+              className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
+            >
+              {isMicOn ? (
+                <MicIcon className="text-white text-4xl" />
+              ) : (
+                <MicOffIcon className="text-white text-4xl" />
+              )}
+            </IconButton>
+          </div>
+        </Tooltip>
       </div>
     </div>
   );
 };
 
 export default AudioWaveform;
+
 
 // https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da
 // TODO: Prevent microphone button from shifting when waveform changes. 
@@ -168,3 +159,36 @@ export default AudioWaveform;
 //  - Check if `speech-to-text` service is detecting the wrong language. 
 //  - Explicitly set the language model to `en-US` when initializing speech recognition. 
 //  - Log detected text to verify what the AI is actually hearing. 
+
+
+// TODO: Add a responsive Material UI Navbar
+//  - Use MUI's `<AppBar>` and `<Toolbar>` components.
+//  - Include links for "Home," "About," and "Contact".
+//  - Ensure it collapses into a menu on mobile devices.
+
+// TODO: Consider integrating Google Ads (???)
+//  - Check if Google Ads is relevant for monetization.
+//  - If adding, implement Google AdSense via `react-google-adsense`.
+//  - Ensure ads do not interfere with user experience (avoid excessive ads).
+//  - Styling the Ad Container
+
+// TODO: Implement SEO best practices
+//  - Add `<meta>` tags for title, description, and keywords.
+//  - Use `next/head` for metadata management in a Next.js project.
+//  - Ensure proper Open Graph and Twitter card metadata for social sharing.
+
+// TODO: Add a welcome message for users
+//  - Display a greeting like: "Hi, welcome to my prototype AI agent. All feedback is welcome!"
+//  - Position this message at the top of the page or inside the chat area.
+//  - Use a styled `<Typography>` component for readability.
+
+// TODO: Add prompt suggestions like ChatGPT
+//  - Provide example prompts like "What can you do?" or "Summarize this article."
+//  - Implement a button UI where clicking a suggestion auto-fills the input box.
+//  - Store predefined prompts in an array and display dynamically.
+
+// TODO: Create a feedback section
+//  - Add a simple feedback form with fields for Name, Email (optional), and Comments.
+//  - Include a submit button that logs feedback to a database or sends an email.
+//  - Optionally, allow users to upvote or rate the AI's responses.
+
