@@ -9,9 +9,7 @@ import { stopConnection } from "../../realtimeAPI/stopConnection";
 
 const AudioWaveform = () => {
   const [isMicOn, setIsMicOn] = useState(false);
-  // Store connection in a ref instead of a regular variable
   const connectionRef = useRef(null);
-  
   const barsRef = useRef([]);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -20,7 +18,6 @@ const AudioWaveform = () => {
 
   const startMicrophone = async () => {
     try {
-      // Store connection in the ref
       connectionRef.current = await startConnection();
       console.log("AI Connection started", connectionRef.current);
 
@@ -32,6 +29,7 @@ const AudioWaveform = () => {
       source.connect(analyserRef.current);
       microphoneStreamRef.current = stream;
 
+      // Increase FFT size for smoother animation
       analyserRef.current.fftSize = 512;
       const bufferLength = analyserRef.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -39,9 +37,17 @@ const AudioWaveform = () => {
       const animateBars = () => {
         analyserRef.current.getByteFrequencyData(dataArray);
         barsRef.current.forEach((bar, index) => {
+          // Get frequency data for this bar
           const value = dataArray[index % bufferLength];
-          const height = (value / 255) * 100 + 50;
-          bar.style.height = `${height}px`;
+          // Calculate the full height based on the audio value
+          const height = (value / 255) * 100;
+          
+          // Center the bar in its container without any transform
+          if (bar) {
+            bar.style.height = `${height}px`;
+            // Remove the transform - we'll center using flexbox instead
+            bar.style.transform = "none";
+          }
         });
         animationIdRef.current = requestAnimationFrame(animateBars);
       };
@@ -50,13 +56,11 @@ const AudioWaveform = () => {
       setIsMicOn(true);
     } catch (err) {
       console.error("Error starting microphone and AI:", err);
-      // Clean up any partial connections on error
       await stopMicrophone();
     }
   };
 
   const stopMicrophone = async () => {
-    // Check the ref for the connection
     if (connectionRef.current) {
       stopConnection(connectionRef.current);
       connectionRef.current = null;
@@ -76,9 +80,13 @@ const AudioWaveform = () => {
       animationIdRef.current = null;
     }
 
+    // Reset bars to minimum height when stopped
     if (barsRef.current) {
       barsRef.current.forEach((bar) => {
-        if (bar) bar.style.height = "50px";
+        if (bar) {
+          bar.style.height = "4px";
+          bar.style.transform = "none";
+        }
       });
     }
 
@@ -89,19 +97,23 @@ const AudioWaveform = () => {
     isMicOn ? stopMicrophone() : startMicrophone();
   };
 
-  // Rest of the component remains the same
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
-      <div className="relative w-full max-w-md h-64">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 flex gap-1 items-end">
+      <div className="relative w-full max-w-md h-64 flex items-center justify-center">
+        {/* Center container for waveform bars */}
+        <div className="relative flex gap-1 items-center h-full">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              ref={(el) => (barsRef.current[i] = el)}
-              className={`w-10 h-[50px] rounded-lg transition-all ease-out ${
-                ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
-              }`}
-            ></div>
+              className="flex items-center h-full"
+            >
+              <div
+                ref={(el) => (barsRef.current[i] = el)}
+                className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
+                  ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
+                }`}
+              ></div>
+            </div>
           ))}
         </div>
 
@@ -133,23 +145,23 @@ const AudioWaveform = () => {
   );
 };
 
-export default AudioWaveform;
-
+export default AudioWaveform
 
 // https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da
-// TODO: Prevent microphone button from shifting when waveform changes. 
-//  - Wrap the waveform and button in a flex container with a fixed height.
+// // TODO: Prevent microphone button from shifting when waveform changes. 
+// //  - Wrap the waveform and button in a flex container with a fixed height.
 
-// TODO: Reduce the gap between waveform bars. 
-//  - Update `gap-2` to `gap-1` in the waveform container class.
+// // TODO: Reduce the gap between waveform bars. 
+// //  - Update `gap-2` to `gap-1` in the waveform container class.
 
-// TODO: Show a tooltip when hovering over the microphone button. 
-//  - Use MUI’s `<Tooltip>` component to display a message on hover.
+// // TODO: Show a tooltip when hovering over the microphone button. 
+// //  - Use MUI’s `<Tooltip>` component to display a message on hover.
 
-// TODO: Fix overlapping audio when stopping and restarting connection. 
-//  - Ensure `stopConnection()` fully closes the previous connection before starting a new one. 
-//  - Clear any existing event listeners before re-initializing the audio stream. 
+// // TODO: Fix overlapping audio when stopping and restarting connection. 
+// //  - Ensure `stopConnection()` fully closes the previous connection before starting a new one. 
+// //  - Clear any existing event listeners before re-initializing the audio stream. 
 
+// DO LATER
 // TODO: Improve color switching between inbound and outbound audio. 
 //  - Currently, only the microphone input is being analyzed. 
 //  - Capture **both microphone and AI audio output** by combining the streams. 
@@ -160,7 +172,7 @@ export default AudioWaveform;
 //  - Explicitly set the language model to `en-US` when initializing speech recognition. 
 //  - Log detected text to verify what the AI is actually hearing. 
 
-
+// NEXT
 // TODO: Add a responsive Material UI Navbar
 //  - Use MUI's `<AppBar>` and `<Toolbar>` components.
 //  - Include links for "Home," "About," and "Contact".
