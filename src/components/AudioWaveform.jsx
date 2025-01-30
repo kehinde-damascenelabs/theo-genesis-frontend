@@ -98,7 +98,7 @@ const AudioWaveform = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-900">
+    <div className="flex flex-col items-center justify-center m-screen pb-24">
       <div className="relative w-full max-w-md h-64 flex items-center justify-center">
         {/* Center container for waveform bars */}
         <div className="relative flex gap-1 items-center h-full">
