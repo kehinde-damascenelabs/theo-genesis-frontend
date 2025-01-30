@@ -167,6 +167,8 @@ export default AudioWaveform
 //  - Capture **both microphone and AI audio output** by combining the streams. 
 //  - Use Web Audio API's `MediaElementSource` to analyze AI-generated audio. 
 
+// TODO: Add waveform reponsiveness to both in.out audio
+
 // TODO: Fix AI agent misinterpreting spoken language as Spanish. 
 //  - Check if `speech-to-text` service is detecting the wrong language. 
 //  - Explicitly set the language model to `en-US` when initializing speech recognition. 
