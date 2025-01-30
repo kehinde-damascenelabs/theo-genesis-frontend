@@ -32,7 +32,7 @@ app.get("/session", async (req, res) => {
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini-realtime-preview-2024-12-17", // Specify the model to use
-                voice: "verse", // Specify the voice for audio responses
+                voice: "oynx", // Specify the voice for audio responses
             }),
         });
 

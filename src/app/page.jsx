@@ -5,7 +5,7 @@ import Divider from '@mui/material/Divider';
 import AppTheme from '@/theme/AppTheme';
 import AppAppBar from '@/components/AppAppBar';
 import Hero from '@/components/Hero';
-import FAQ from '@/components/Feedback';
+import Comment from '@/components/Comment';
 import Footer from '@/components/Footer';
 
 export default function Page(props) {
@@ -18,7 +18,7 @@ export default function Page(props) {
        <Divider />
        <AudioWaveform />
         {/* <Divider /> */}
-        <FAQ />
+        <Comment />
         <Footer />
     </AppTheme>
   );

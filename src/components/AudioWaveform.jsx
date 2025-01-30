@@ -161,25 +161,35 @@ export default AudioWaveform
 // //  - Ensure `stopConnection()` fully closes the previous connection before starting a new one. 
 // //  - Clear any existing event listeners before re-initializing the audio stream. 
 
+// // TODO: Add a responsive Material UI Navbar
+// //  - Use MUI's `<AppBar>` and `<Toolbar>` components.
+// //  - Include links for "Home," "About," and "Contact".
+// //  - Ensure it collapses into a menu on mobile devices.
+
+// // TODO: Add a welcome message for users
+// //  - Display a greeting like: "Hi, welcome to my prototype AI agent. All feedback is welcome!"
+// //  - Position this message at the top of the page or inside the chat area.
+// //  - Use a styled `<Typography>` component for readability.
+
+// // TODO: Create a feedback section
+// //  - Add a simple feedback form with fields for Name, Email (optional), and Comments.
+// //  - Include a submit button that logs feedback to a database or sends an email.
+// //  - Optionally, allow users to upvote or rate the AI's responses.
+
 // DO LATER
 // TODO: Improve color switching between inbound and outbound audio. 
 //  - Currently, only the microphone input is being analyzed. 
 //  - Capture **both microphone and AI audio output** by combining the streams. 
 //  - Use Web Audio API's `MediaElementSource` to analyze AI-generated audio. 
 
-// TODO: Add waveform reponsiveness to both in.out audio
+// TODO: Add waveform reponsiveness to both in/out audio
 
-// TODO: Fix AI agent misinterpreting spoken language as Spanish. 
+// TODO: Fix AI agent misinterpreting spoken language as Spanish. STILL A BIG ISSUE
 //  - Check if `speech-to-text` service is detecting the wrong language. 
 //  - Explicitly set the language model to `en-US` when initializing speech recognition. 
 //  - Log detected text to verify what the AI is actually hearing. 
 
 // NEXT
-// TODO: Add a responsive Material UI Navbar
-//  - Use MUI's `<AppBar>` and `<Toolbar>` components.
-//  - Include links for "Home," "About," and "Contact".
-//  - Ensure it collapses into a menu on mobile devices.
-
 // TODO: Consider integrating Google Ads (???)
 //  - Check if Google Ads is relevant for monetization.
 //  - If adding, implement Google AdSense via `react-google-adsense`.
@@ -191,18 +201,14 @@ export default AudioWaveform
 //  - Use `next/head` for metadata management in a Next.js project.
 //  - Ensure proper Open Graph and Twitter card metadata for social sharing.
 
-// TODO: Add a welcome message for users
-//  - Display a greeting like: "Hi, welcome to my prototype AI agent. All feedback is welcome!"
-//  - Position this message at the top of the page or inside the chat area.
-//  - Use a styled `<Typography>` component for readability.
 
 // TODO: Add prompt suggestions like ChatGPT
 //  - Provide example prompts like "What can you do?" or "Summarize this article."
 //  - Implement a button UI where clicking a suggestion auto-fills the input box.
 //  - Store predefined prompts in an array and display dynamically.
 
-// TODO: Create a feedback section
-//  - Add a simple feedback form with fields for Name, Email (optional), and Comments.
-//  - Include a submit button that logs feedback to a database or sends an email.
-//  - Optionally, allow users to upvote or rate the AI's responses.
+
+// TODO: Turn a feedback section into comment section?
+// TODO: Question will my application beable to handle multiple users??
+// TODO: Dont i have to upload the server first then the frontend???
 
