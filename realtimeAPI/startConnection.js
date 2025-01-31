@@ -4,7 +4,7 @@ import dotenv from "dotenv"; // Loads environment variables from a .env file
 // Load environment variables from the .env file
 dotenv.config();
 
-const API_KEYS = process.env.NEXT_PUBLIC_API_KEYS.split(",");
+const API_KEYS = process.env.API_KEYS.split(",");
 
 export async function startConnection() {
     // Fetch OpenAI ephemeral key from the backend
