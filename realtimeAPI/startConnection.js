@@ -1,8 +1,16 @@
 import { agentPrompt } from "../src/helper_func";
+import dotenv from "dotenv"; // Loads environment variables from a .env file
+
+// Load environment variables from the .env file
+dotenv.config();
+
+const API_KEYS = process.env.API_KEYS.split(",");
 
 export async function startConnection() {
     // Fetch OpenAI ephemeral key from the backend
-    const tokenResponse = await fetch("http://localhost:3000/session");
+    const tokenResponse = await fetch("https://openaibackend-production.up.railway.app/session", {
+        headers: { "x-api-key": API_KEYS }
+    })
     const data = await tokenResponse.json();
     const EPHEMERAL_KEY = data.client_secret.value;
 
