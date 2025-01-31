@@ -1,18 +1,9 @@
 import { agentPrompt } from "../src/helper_func.js";
-import dotenv from "dotenv"; // Loads environment variables from a .env file
-
-// Load environment variables from the .env file
-dotenv.config();
-
-const API_KEYS = process.env.API_KEYS.split(",");
 
 export async function startConnection() {
-    // Fetch OpenAI ephemeral key from the backend
-    const tokenResponse = await fetch("https://openaibackend-production.up.railway.app/session", {
-        headers: { "x-api-key": API_KEYS }
-    })
-    const data = await tokenResponse.json();
-    const EPHEMERAL_KEY = data.client_secret.value;
+    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    const json = await response.json();
+    const EPHEMERAL_KEY = json.ephemeralKey;
 
     // Create WebRTC peer connection
     const pc = new RTCPeerConnection();
