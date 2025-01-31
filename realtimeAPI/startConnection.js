@@ -1,4 +1,4 @@
-import { agentPrompt } from "../src/helper_func";
+import { agentPrompt } from "../src/helper_func.js";
 import dotenv from "dotenv"; // Loads environment variables from a .env file
 
 // Load environment variables from the .env file
