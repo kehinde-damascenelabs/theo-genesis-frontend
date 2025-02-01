@@ -10,12 +10,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Paste the Google AdSense script here */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXX"
-          crossOrigin="anonymous"
-        />
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9098667159216533"
+     crossorigin="anonymous"></script>
       </head>
       <body>
         {children}
