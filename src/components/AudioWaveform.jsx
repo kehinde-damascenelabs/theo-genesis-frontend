@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { IconButton, Tooltip } from "@mui/material";
-import MicOffIcon from '@mui/icons-material/MicOff';
-import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from "@mui/icons-material/MicOff";
+import MicIcon from "@mui/icons-material/Mic";
 import { startConnection } from "../../realtimeAPI/startConnection";
 import { stopConnection } from "../../realtimeAPI/stopConnection";
 
@@ -41,7 +41,7 @@ const AudioWaveform = () => {
           const value = dataArray[index % bufferLength];
           // Calculate the full height based on the audio value
           const height = (value / 255) * 100;
-          
+
           // Center the bar in its container without any transform
           if (bar) {
             bar.style.height = `${height}px`;
@@ -69,12 +69,14 @@ const AudioWaveform = () => {
 
     if (microphoneStreamRef.current) {
       microphoneStreamRef.current.getTracks().forEach((track) => track.stop());
+      microphoneStreamRef.current = null;
     }
-    
+
     if (audioContextRef.current) {
       await audioContextRef.current.close();
+      audioContextRef.current = null;
     }
-    
+
     if (animationIdRef.current) {
       cancelAnimationFrame(animationIdRef.current);
       animationIdRef.current = null;
@@ -97,16 +99,29 @@ const AudioWaveform = () => {
     isMicOn ? stopMicrophone() : startMicrophone();
   };
 
+  // **Page Visibility Handler**
+  // When the page is hidden, automatically stop the microphone.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isMicOn) {
+        console.log("Page hidden. Stopping microphone to conserve resources.");
+        stopMicrophone();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isMicOn]);
+
   return (
     <div className="flex flex-col items-center justify-center m-screen pb-24">
       <div className="relative w-full max-w-md h-64 flex items-center justify-center">
         {/* Center container for waveform bars */}
         <div className="relative flex gap-1 items-center h-full">
           {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center h-full"
-            >
+            <div key={i} className="flex items-center h-full">
               <div
                 ref={(el) => (barsRef.current[i] = el)}
                 className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
@@ -145,7 +160,8 @@ const AudioWaveform = () => {
   );
 };
 
-export default AudioWaveform
+export default AudioWaveform;
+
 
 // https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da
 // // TODO: Prevent microphone button from shifting when waveform changes. 

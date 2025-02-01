@@ -2,6 +2,7 @@ import { agentPrompt } from "../src/helper_func.js";
 
 export async function startConnection() {
     const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    // const response = await fetch("http://localhost:3001/getEKey"); DEV
     const json = await response.json();
     const EPHEMERAL_KEY = json.ephemeralKey;
 
