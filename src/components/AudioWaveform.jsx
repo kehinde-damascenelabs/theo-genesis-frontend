@@ -1,129 +1,199 @@
-"use client";
+"use client"; // This directive indicates that the component should be rendered on the client-side
 
+// Import React hooks for managing state, refs, and side effects
 import { useState, useRef, useEffect } from "react";
+// Import MUI components for buttons and tooltips
 import { IconButton, Tooltip } from "@mui/material";
+// Import MUI icons for microphone on/off states
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
+// Import functions to start and stop a connection (likely WebRTC or similar)
 import { startConnection } from "../../realtimeAPI/startConnection";
 import { stopConnection } from "../../realtimeAPI/stopConnection";
 
+// AudioWaveform component provides microphone control and audio visualization
 const AudioWaveform = () => {
+  // State to track if the microphone is on or off
   const [isMicOn, setIsMicOn] = useState(false);
-  const connectionRef = useRef(null);
-  const barsRef = useRef([]);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const microphoneStreamRef = useRef(null);
-  const animationIdRef = useRef(null);
+  // State to track if a processing operation is currently running (prevents concurrent actions)
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const startMicrophone = async () => {
+  // Refs to persist mutable values across renders
+  const connectionRef = useRef(null); // Reference for the external connection (e.g., AI or WebRTC)
+  const barsRef = useRef([]);         // References to DOM elements representing the waveform bars
+  const audioContextRef = useRef(null);  // Reference to the AudioContext for audio processing
+  const analyserRef = useRef(null);        // Reference to the AnalyserNode for frequency data extraction
+  const microphoneStreamRef = useRef(null); // Reference to the MediaStream from the user's microphone
+  const animationIdRef = useRef(null);        // Reference to the current animation frame for cleanup
+
+  // cleanup: Cleans up all audio-related resources and stops ongoing processes
+  const cleanup = async () => {
+    // Set processing state to true to disable actions during cleanup
+    setIsProcessing(true);
     try {
-      connectionRef.current = await startConnection();
-      console.log("AI Connection started", connectionRef.current);
+      // Stop and cleanup any active connection (e.g., WebRTC/AI connection)
+      if (connectionRef.current) {
+        await stopConnection(connectionRef.current);
+        connectionRef.current = null;
+      }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      microphoneStreamRef.current = stream;
-
-      // Increase FFT size for smoother animation
-      analyserRef.current.fftSize = 512;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const animateBars = () => {
-        analyserRef.current.getByteFrequencyData(dataArray);
-        barsRef.current.forEach((bar, index) => {
-          // Get frequency data for this bar
-          const value = dataArray[index % bufferLength];
-          // Calculate the full height based on the audio value
-          const height = (value / 255) * 100;
-
-          // Center the bar in its container without any transform
-          if (bar) {
-            bar.style.height = `${height}px`;
-            // Remove the transform - we'll center using flexbox instead
-            bar.style.transform = "none";
-          }
+      // Stop all audio tracks from the microphone stream
+      if (microphoneStreamRef.current) {
+        const tracks = microphoneStreamRef.current.getTracks();
+        tracks.forEach(track => {
+          track.stop();      // Stop the track
+          track.enabled = false; // Disable the track
         });
-        animationIdRef.current = requestAnimationFrame(animateBars);
-      };
+        microphoneStreamRef.current = null;
+      }
 
-      animateBars();
-      setIsMicOn(true);
-    } catch (err) {
-      console.error("Error starting microphone and AI:", err);
-      await stopMicrophone();
-    }
-  };
+      // Close the AudioContext if it's still open
+      if (audioContextRef.current) {
+        if (audioContextRef.current.state !== 'closed') {
+          await audioContextRef.current.close();
+        }
+        audioContextRef.current = null;
+      }
 
-  const stopMicrophone = async () => {
-    if (connectionRef.current) {
-      stopConnection(connectionRef.current);
-      connectionRef.current = null;
-    }
-    console.log("Microphone and AI connection stopped.");
+      // Disconnect the analyser node
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
+      }
 
-    if (microphoneStreamRef.current) {
-      microphoneStreamRef.current.getTracks().forEach((track) => track.stop());
-      microphoneStreamRef.current = null;
-    }
+      // Cancel any ongoing animation frame for the waveform visualization
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = null;
+      }
 
-    if (audioContextRef.current) {
-      await audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current);
-      animationIdRef.current = null;
-    }
-
-    // Reset bars to minimum height when stopped
-    if (barsRef.current) {
-      barsRef.current.forEach((bar) => {
+      // Reset the visual appearance of the waveform bars
+      barsRef.current.forEach(bar => {
         if (bar) {
           bar.style.height = "4px";
           bar.style.transform = "none";
         }
       });
+
+    } catch (error) {
+      console.error("Error during cleanup:", error);
+    } finally {
+      // Reset processing state and update microphone state to off
+      setIsProcessing(false);
+      setIsMicOn(false);
     }
-
-    setIsMicOn(false);
   };
 
-  const toggleMicrophone = () => {
-    isMicOn ? stopMicrophone() : startMicrophone();
+  // startMicrophone: Initiates the microphone stream and audio visualization
+  const startMicrophone = async () => {
+    try {
+      // Clean up any previous connection/resources before starting a new one
+      await cleanup();
+
+      // Start a new external connection (e.g., WebRTC or AI service connection)
+      connectionRef.current = await startConnection();
+      console.log("AI Connection started", connectionRef.current);
+
+      // Request microphone access from the user (audio only)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create a new AudioContext for handling audio operations
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      // Create an AnalyserNode to extract frequency data for visualization
+      analyserRef.current = audioContextRef.current.createAnalyser();
+
+      // Create a media source from the microphone stream and connect it to the analyser node
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      // Save the microphone stream reference for later cleanup
+      microphoneStreamRef.current = stream;
+
+      // Configure the analyser node
+      analyserRef.current.fftSize = 512; // Determines the frequency resolution
+      const bufferLength = analyserRef.current.frequencyBinCount; // Half of fftSize
+      const dataArray = new Uint8Array(bufferLength); // Array to store frequency data
+
+      // animateBars: Function to update the waveform bars based on the current frequency data
+      const animateBars = () => {
+        // Guard clause: If the analyser is not available, exit the animation
+        if (!analyserRef.current) return; 
+        
+        // Populate the dataArray with current frequency data from the analyser
+        analyserRef.current.getByteFrequencyData(dataArray);
+        // Loop over each bar element to update its height based on frequency data
+        barsRef.current.forEach((bar, index) => {
+          if (!bar) return; // Skip if the bar element is undefined
+          
+          // Calculate the height proportionally (value normalized to a percentage)
+          const value = dataArray[index % bufferLength];
+          const height = (value / 255) * 100;
+          bar.style.height = `${height}px`; // Set the new height of the bar
+          bar.style.transform = "none"; // Reset any transforms (if applicable)
+        });
+        
+        // Schedule the next frame of animation
+        animationIdRef.current = requestAnimationFrame(animateBars);
+      };
+
+      // Start the animation loop for updating the waveform visualization
+      animateBars();
+      // Update state to indicate that the microphone is now active
+      setIsMicOn(true);
+    } catch (err) {
+      console.error("Error starting microphone and AI:", err);
+      // On error, perform cleanup to ensure no resources are leaked
+      await cleanup();
+    }
   };
 
-  // **Page Visibility Handler**
-  // When the page is hidden, automatically stop the microphone.
+  // toggleMicrophone: Toggles the microphone and related processes on or off
+  const toggleMicrophone = async () => {
+    // Prevent toggling if a process is already running
+    if (isProcessing) return; 
+    
+    // If the microphone is currently on, clean up (i.e., turn it off)
+    if (isMicOn) {
+      await cleanup();
+    } else {
+      // Otherwise, start the microphone and associated processes
+      await startMicrophone();
+    }
+  };
+
+  // useEffect hook to manage side effects related to page visibility
   useEffect(() => {
+    // handleVisibilityChange: Stops the microphone when the page becomes hidden
     const handleVisibilityChange = () => {
       if (document.hidden && isMicOn) {
         console.log("Page hidden. Stopping microphone to conserve resources.");
-        stopMicrophone();
+        cleanup();
       }
     };
 
+    // Add event listener for visibility changes
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    // Cleanup: Remove the event listener and clean up resources when the component unmounts
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      cleanup(); // Ensure all resources are cleaned up on unmount
     };
-  }, [isMicOn]);
+  }, [isMicOn]); // Depend on isMicOn to re-run if microphone state changes
 
   return (
+    // Main container for the audio waveform and microphone control UI
     <div className="flex flex-col items-center justify-center m-screen pb-24">
       <div className="relative w-full max-w-md h-64 flex items-center justify-center">
-        {/* Center container for waveform bars */}
+        {/* Container for the waveform visualization bars */}
         <div className="relative flex gap-1 items-center h-full">
+          {/* Create 5 bars for visualizing audio frequency data */}
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center h-full">
               <div
+                // Save a reference to each bar element for dynamic styling
                 ref={(el) => (barsRef.current[i] = el)}
+                // Assign width, minimum height, rounded corners, and transition effects,
+                // with a unique background color for each bar based on its index
                 className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
                   ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
                 }`}
@@ -132,6 +202,7 @@ const AudioWaveform = () => {
           ))}
         </div>
 
+        {/* Tooltip wrapping the microphone toggle button */}
         <Tooltip
           title={
             <div className="text-center">
@@ -142,11 +213,14 @@ const AudioWaveform = () => {
           arrow
           placement="bottom"
         >
+          {/* Position the microphone toggle button absolutely within the container */}
           <div className="absolute top-52 left-1/2 -translate-x-1/2">
             <IconButton
-              onClick={toggleMicrophone}
-              className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
+              onClick={toggleMicrophone} // Toggle microphone state when clicked
+              disabled={isProcessing} // Disable button while processing to prevent multiple actions
+              className={`p-4 ${isProcessing ? 'bg-gray-500' : 'bg-gray-700 hover:bg-gray-600'} rounded-full transition-all`}
             >
+              {/* Conditionally render the MicIcon (on) or MicOffIcon (off) based on isMicOn */}
               {isMicOn ? (
                 <MicIcon className="text-white text-4xl" />
               ) : (
@@ -161,6 +235,7 @@ const AudioWaveform = () => {
 };
 
 export default AudioWaveform;
+
 
 
 // https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da

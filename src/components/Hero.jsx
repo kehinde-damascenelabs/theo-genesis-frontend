@@ -70,7 +70,7 @@ export default function Hero() {
               width: { sm: '100%', md: '80%' },
             }}
           >
-            Hi, I'm Kehinde!
+            Hi, My name is Kehinde!
             I'm a software developer building AI voice agents for businesses. Think of this AI like Jarvis from Iron Man—minus internet access (for now).
             This is a prototype, and more features are coming soon. I’d love your feedback—let me know what features you'd like to see below.
             AI can make mistakes, so please double-check any responses. 
