@@ -6,7 +6,7 @@ export async function startConnection() {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
     const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
     // For development, you might use a local endpoint (uncomment below if needed)
-    // const response = await fetch("http://localhost:3001/getEKey"); DEV
+    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -44,7 +44,7 @@ export async function startConnection() {
     await pc.setLocalDescription(offer);
     
     // Send the SDP offer to the OpenAI realtime API to start the session.
-    const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=gpt-4o-mini-realtime-preview-2024-12-17`, {
+    const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`, {
         method: "POST",
         // The body contains the SDP offer from the WebRTC connection.
         body: offer.sdp,
