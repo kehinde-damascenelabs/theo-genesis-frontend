@@ -41,3 +41,4 @@ yarn-error.log*
 next-env.d.ts
 realtimeAPI/index.html
 Sandbox.js
+src/helper_func.js

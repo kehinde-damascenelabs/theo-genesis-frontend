@@ -1,12 +1,9 @@
-// Import the agentPrompt from the helper functions module. This prompt is later used for the AI's initial response.
-import { agentPrompt } from "../src/helper_func.js";
-
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection() {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
     // For development, you might use a local endpoint (uncomment below if needed)
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -67,8 +64,6 @@ export async function startConnection() {
         response: { 
             // Indicate that the AI should handle both text and audio modalities.
             modalities: ["text", "audio"],
-            // Include the agent prompt that was imported earlier.
-            instructions: agentPrompt 
         },
     };
     // Once the data channel is open, send the initial response to the AI.
