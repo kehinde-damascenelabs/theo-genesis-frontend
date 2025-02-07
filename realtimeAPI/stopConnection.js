@@ -17,15 +17,18 @@ export function stopConnection({ pc, dc, audioEl }) {
     // Clean up the Audio Element (audioEl)
     // -------------------------------
     if (audioEl) {
-        // Pause the audio playback.
+        // Pause the audio playback
         audioEl.pause();
-        // Detach any media stream that is set as the source.
+        // Prevent auto-replay if the element is reused
+        audioEl.autoplay = false;
+        // Detach any media stream that is set as the source
         audioEl.srcObject = null;
-        // Reload the audio element to reset its state.
+        // Reload the audio element to reset its state
         audioEl.load();
-        // Remove the audio element from the DOM.
+        // Remove the audio element from the DOM
         audioEl.remove();
     }
+    
     
     // ------------------------------------
     // Clean up the WebRTC Peer Connection (pc)
