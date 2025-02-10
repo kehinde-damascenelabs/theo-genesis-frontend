@@ -3,15 +3,12 @@
 import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import InputLabel from '@mui/material/InputLabel';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import visuallyHidden from '@mui/utils/visuallyHidden';
-import StyledBox from "./styledBox";
+import { HERO_TEXT } from '../constants';
+
+
 
 export default function Hero() {
   const theme = useTheme();
@@ -51,7 +48,7 @@ export default function Hero() {
               fontSize: 'clamp(3rem, 10vw, 3.5rem)',
             }}
           >
-            AI&nbsp;Voice&nbsp;Agent&nbsp;
+            {HERO_TEXT.title}
             <Typography
               component="span"
               variant="h1"
@@ -60,7 +57,7 @@ export default function Hero() {
                 color: isDarkMode ? 'primary.light' : 'primary.main',
               }}
             >
-              Demo
+              {HERO_TEXT.subtitle}
             </Typography>
           </Typography>
           <Typography
@@ -70,10 +67,7 @@ export default function Hero() {
               width: { sm: '100%', md: '80%' },
             }}
           >
-            Hi, My name is Kehinde!
-            I'm a software developer building AI voice agents for businesses. Think of this AI like Jarvis from Iron Man—minus internet access (for now).
-            This is a prototype, and more features are coming soon. I’d love your feedback—let me know what features you'd like to see below.
-            AI can make mistakes, so please double-check any responses. 
+            {HERO_TEXT.description} 
             <Typography
               component="span"
               sx={{
@@ -82,58 +76,10 @@ export default function Hero() {
                 fontWeight: 'bold',
               }}
             >
-              Click the microphone & start a conversation!
+              {HERO_TEXT.actionText}
             </Typography>
           </Typography>
-
-          {/* REMOVE DO NOT NEED  */}
-          {/* <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            useFlexGap
-            sx={{ pt: 2, width: { xs: '100%', sm: '350px' } }}
-          >
-            <InputLabel htmlFor="email-hero" sx={visuallyHidden}>
-              Email
-            </InputLabel>
-            <TextField
-              id="email-hero"
-              hiddenLabel
-              size="small"
-              variant="outlined"
-              aria-label="Enter your email address"
-              placeholder="Your email address"
-              fullWidth
-              slotProps={{
-                htmlInput: {
-                  autoComplete: 'off',
-                  'aria-label': 'Enter your email address',
-                },
-              }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              sx={{ minWidth: 'fit-content' }}
-            >
-              Start now
-            </Button>
-          </Stack>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ textAlign: 'center' }}
-          >
-            By clicking &quot;Start now&quot; you agree to our&nbsp;
-            <Link href="#" color="primary">
-              Terms & Conditions
-            </Link>
-            .
-          </Typography> */}
         </Stack>
-        {/* REMOVE DO NOT NEED  */}
-        {/* <StyledBox id="image" /> */}
       </Container>
     </Box>
   );
