@@ -4,6 +4,8 @@ import { stopConnection } from "../service/realtimeAPI/stopConnection";
 
 export const useMicrophone = () => {
   const [isMicOn, setIsMicOn] = useState(false);
+  // Add new loading state
+  const [isConnecting, setIsConnecting] = useState(false);
   const connectionRef = useRef(null);
   const barsRef = useRef([]);
   const audioContextRef = useRef(null);
@@ -13,6 +15,8 @@ export const useMicrophone = () => {
 
   const startMicrophone = async () => {
     try {
+      setIsConnecting(true);
+
       connectionRef.current = await startConnection();
       console.log("AI Connection started", connectionRef.current);
 
@@ -43,6 +47,9 @@ export const useMicrophone = () => {
     } catch (err) {
       console.error("Error starting microphone and AI:", err);
       stopMicrophone();
+    } finally {
+ 
+      setIsConnecting(false);
     }
   };
 
@@ -89,5 +96,5 @@ export const useMicrophone = () => {
     };
   }, [isMicOn]);
 
-  return { isMicOn, startMicrophone, stopMicrophone, barsRef };
+  return { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef };
 };

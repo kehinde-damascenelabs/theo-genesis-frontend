@@ -2,11 +2,13 @@
 
 import { useMicrophone } from "../hooks/useMicrophone";
 import { IconButton, Tooltip } from "@mui/material";
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
 
 const AudioWaveform = () => {
-  const { isMicOn, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
+  const { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen pb-24">
@@ -25,17 +27,39 @@ const AudioWaveform = () => {
         </div>
 
         <Tooltip
-          title={<div className="text-center"><strong>{isMicOn ? "Turn off microphone" : "Turn on microphone"}</strong></div>}
+          title={
+            <div className="text-center">
+              <strong>
+                {isConnecting
+                  ? "Connecting..."
+                  : isMicOn
+                  ? "Turn off microphone"
+                  : "Turn on microphone"}
+              </strong>
+            </div>
+          }
           arrow
           placement="bottom"
         >
           <div className="absolute top-52 left-1/2 -translate-x-1/2">
-            <IconButton
-              onClick={isMicOn ? stopMicrophone : startMicrophone}
-              className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
-            >
-              {isMicOn ? <MicIcon className="text-white text-4xl" /> : <MicOffIcon className="text-white text-4xl" />}
-            </IconButton>
+            <div className="relative">
+              {isConnecting ? (
+                <Box sx={{ display: 'flex' }}>
+                  <CircularProgress size={40} sx={{ color: '#f97316' }} />
+                </Box>
+              ) : (
+                <IconButton
+                  onClick={isMicOn ? stopMicrophone : startMicrophone}
+                  className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
+                >
+                  {isMicOn ? (
+                    <MicIcon className="text-white text-4xl" />
+                  ) : (
+                    <MicOffIcon className="text-white text-4xl" />
+                  )}
+                </IconButton>
+              )}
+            </div>
           </div>
         </Tooltip>
       </div>
@@ -53,7 +77,7 @@ export default AudioWaveform;
 // //  - Update `gap-2` to `gap-1` in the waveform container class.
 
 // // TODO: Show a tooltip when hovering over the microphone button.
-// //  - Use MUI’s `<Tooltip>` component to display a message on hover.
+// //  - Use MUI's `<Tooltip>` component to display a message on hover.
 
 // // TODO: Fix overlapping audio when stopping and restarting connection.
 // //  - Ensure `stopConnection()` fully closes the previous connection before starting a new one.
