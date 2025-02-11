@@ -1,113 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useMicrophone } from "../hooks/useMicrophone";
 import { IconButton, Tooltip } from "@mui/material";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
-import { startConnection } from "../../realtimeAPI/startConnection";
-import { stopConnection } from "../../realtimeAPI/stopConnection";
 
 const AudioWaveform = () => {
-  const [isMicOn, setIsMicOn] = useState(false);
-  const connectionRef = useRef(null);
-  const barsRef = useRef([]);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const microphoneStreamRef = useRef(null);
-  const animationIdRef = useRef(null);
-
-  const startMicrophone = async () => {
-    try {
-      connectionRef.current = await startConnection();
-      console.log("AI Connection started", connectionRef.current);
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      microphoneStreamRef.current = stream;
-
-      analyserRef.current.fftSize = 512;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const animateBars = () => {
-        analyserRef.current.getByteFrequencyData(dataArray);
-        barsRef.current.forEach((bar, index) => {
-          const value = dataArray[index % bufferLength];
-          const height = (value / 255) * 100;
-          if (bar) {
-            bar.style.height = `${height}px`;
-            bar.style.transform = "none";
-          }
-        });
-        animationIdRef.current = requestAnimationFrame(animateBars);
-      };
-
-      animateBars();
-      setIsMicOn(true);
-    } catch (err) {
-      console.error("Error starting microphone and AI:", err);
-      await stopMicrophone();
-    }
-  };
-
-  const stopMicrophone = async () => {
-    if (connectionRef.current) {
-      stopConnection(connectionRef.current);
-      connectionRef.current = null;
-    }
-    console.log("Microphone and AI connection stopped.");
-
-    if (microphoneStreamRef.current) {
-      microphoneStreamRef.current.getTracks().forEach((track) => track.stop());
-      microphoneStreamRef.current = null;
-    }
-
-    if (audioContextRef.current) {
-      await audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current);
-      animationIdRef.current = null;
-    }
-
-    if (barsRef.current) {
-      barsRef.current.forEach((bar) => {
-        if (bar) {
-          bar.style.height = "4px";
-          bar.style.transform = "none";
-        }
-      });
-    }
-
-    setIsMicOn(false);
-  };
-
-  const toggleMicrophone = () => {
-    isMicOn ? stopMicrophone() : startMicrophone();
-  };
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && isMicOn) {
-        console.log("Page hidden. Stopping microphone to conserve resources.");
-        stopMicrophone();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isMicOn]);
+  const { isMicOn, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
 
   return (
-    <div className="flex flex-col items-center justify-center m-screen pb-24">
+    <div className="flex flex-col items-center justify-center min-h-screen pb-24">
       <div className="relative w-full max-w-md h-64 flex items-center justify-center">
         <div className="relative flex gap-1 items-center h-full">
           {[...Array(5)].map((_, i) => (
@@ -123,25 +25,16 @@ const AudioWaveform = () => {
         </div>
 
         <Tooltip
-          title={
-            <div className="text-center">
-              <strong>{isMicOn ? "Turn off microphone" : "Turn on microphone"}</strong>
-              <br />
-            </div>
-          }
+          title={<div className="text-center"><strong>{isMicOn ? "Turn off microphone" : "Turn on microphone"}</strong></div>}
           arrow
           placement="bottom"
         >
           <div className="absolute top-52 left-1/2 -translate-x-1/2">
             <IconButton
-              onClick={toggleMicrophone}
+              onClick={isMicOn ? stopMicrophone : startMicrophone}
               className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
             >
-              {isMicOn ? (
-                <MicIcon className="text-white text-4xl" />
-              ) : (
-                <MicOffIcon className="text-white text-4xl" />
-              )}
+              {isMicOn ? <MicIcon className="text-white text-4xl" /> : <MicOffIcon className="text-white text-4xl" />}
             </IconButton>
           </div>
         </Tooltip>
@@ -151,7 +44,6 @@ const AudioWaveform = () => {
 };
 
 export default AudioWaveform;
-
 
 // https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da
 // // TODO: Prevent microphone button from shifting when waveform changes.
