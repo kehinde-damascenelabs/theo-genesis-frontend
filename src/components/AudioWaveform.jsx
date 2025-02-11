@@ -6,7 +6,7 @@ import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
 
 const AudioWaveform = () => {
-  const { isMicOn, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
+  const { isMicOn, toggleMicrophone, barsRef } = useMicrophone();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen pb-24">
@@ -31,7 +31,7 @@ const AudioWaveform = () => {
         >
           <div className="absolute top-52 left-1/2 -translate-x-1/2">
             <IconButton
-              onClick={isMicOn ? stopMicrophone : startMicrophone}
+              onClick={toggleMicrophone}
               className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
             >
               {isMicOn ? <MicIcon className="text-white text-4xl" /> : <MicOffIcon className="text-white text-4xl" />}
@@ -53,7 +53,7 @@ export default AudioWaveform;
 // //  - Update `gap-2` to `gap-1` in the waveform container class.
 
 // // TODO: Show a tooltip when hovering over the microphone button.
-// //  - Use MUI’s `<Tooltip>` component to display a message on hover.
+// //  - Use MUI's `<Tooltip>` component to display a message on hover.
 
 // // TODO: Fix overlapping audio when stopping and restarting connection.
 // //  - Ensure `stopConnection()` fully closes the previous connection before starting a new one.
