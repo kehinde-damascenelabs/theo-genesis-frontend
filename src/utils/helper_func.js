@@ -4,7 +4,10 @@ export const agentPrompt =
 // Silent audio trick to keep the screen awake on iOS devices
 export const createSilentAudio = () => {
   const audio = new Audio();
-  audio.setAttribute('src', 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+  audio.setAttribute(
+    'src',
+    'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+  );
   audio.setAttribute('loop', 'true');
   return audio;
 };
@@ -13,6 +16,7 @@ export const createSilentAudio = () => {
 export const requestWakeLock = async () => {
   if ('wakeLock' in navigator) {
     try {
+      // Request a wake lock of type 'screen'
       return await navigator.wakeLock.request('screen');
     } catch (err) {
       console.error('Wake Lock request failed:', err);
