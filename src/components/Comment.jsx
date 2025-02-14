@@ -60,7 +60,7 @@ export default function FeedbackSection() {
       }}
     >
       <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold", textAlign: "center" }}>
-        AI Feedback Section
+        Feedback
       </Typography>
       
       <Typography variant="body1" sx={{ mb: 1 }}>
