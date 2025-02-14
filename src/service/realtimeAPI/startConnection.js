@@ -33,6 +33,17 @@ export async function startConnection() {
         const event = JSON.parse(e.data);
         // Log the received AI event.
         console.log("AI Event:", event);
+        
+        // Check if the event contains a failed status
+        if (event.type === "response.done" && event.response?.status === "failed") {
+            // Get the error message if available
+            const errorMessage = event.response?.status_details?.error?.message || "Connection failed";
+            console.error("AI Connection Error:", errorMessage);
+            
+            // Close the connection
+            pc.close();
+            return { error: errorMessage };
+        }
     });
 
     // Begin the WebRTC session by creating an SDP offer.
