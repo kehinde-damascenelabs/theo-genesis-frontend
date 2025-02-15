@@ -17,6 +17,7 @@ export const useMicrophone = () => {
   const mergedAnalyserRef = useRef(null);
   const gainNodeRef = useRef(null);
   const microphoneStreamRef = useRef(null);
+  const remoteSourceRef = useRef(null);
 
   const startMicrophone = async () => {
     try {
@@ -30,10 +31,17 @@ export const useMicrophone = () => {
       mergedAnalyserRef.current.fftSize = 512;
       
       gainNodeRef.current = audioContextRef.current.createGain();
+      // Connect gain node to audio output
+      gainNodeRef.current.connect(audioContextRef.current.destination);
       
       // Start WebRTC connection
       connectionRef.current = await startConnection();
       console.log("AI Connection started", connectionRef.current);
+
+      // Mute the default audio element to prevent double playback
+      if (connectionRef.current.audioEl) {
+        connectionRef.current.audioEl.muted = true;
+      }
 
       // Set up microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -42,18 +50,21 @@ export const useMicrophone = () => {
       // Create microphone source and connect ONLY to the analyzer
       const micSource = audioContextRef.current.createMediaStreamSource(stream);
       micSource.connect(mergedAnalyserRef.current);
-      // Note: We do NOT connect micSource to the gainNode to prevent echo
 
       // Set up remote audio handling
       if (connectionRef.current.audioEl) {
         const setupRemoteAudio = (stream) => {
           if (stream) {
-            const remoteSource = audioContextRef.current.createMediaStreamSource(stream);
+            // Clean up previous remote source if it exists
+            if (remoteSourceRef.current) {
+              remoteSourceRef.current.disconnect();
+            }
+
+            // Create new remote source
+            remoteSourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
             // Connect remote audio to both analyzer and gain node
-            remoteSource.connect(mergedAnalyserRef.current);
-            remoteSource.connect(gainNodeRef.current);
-            // Connect gain node to output
-            gainNodeRef.current.connect(audioContextRef.current.destination);
+            remoteSourceRef.current.connect(mergedAnalyserRef.current);
+            remoteSourceRef.current.connect(gainNodeRef.current);
           }
         };
 
@@ -122,6 +133,12 @@ export const useMicrophone = () => {
     if (microphoneStreamRef.current) {
       microphoneStreamRef.current.getTracks().forEach(track => track.stop());
       microphoneStreamRef.current = null;
+    }
+
+    // Clean up remote source
+    if (remoteSourceRef.current) {
+      remoteSourceRef.current.disconnect();
+      remoteSourceRef.current = null;
     }
 
     // Clean up Web Audio nodes
