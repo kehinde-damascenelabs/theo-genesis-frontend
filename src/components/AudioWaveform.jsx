@@ -1,68 +1,119 @@
 "use client";
 
 import { useMicrophone } from "../hooks/useMicrophone";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Grid } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
+import { useEffect, useState } from "react";
 
-const AudioWaveform = () => {
+const AudioWaveform = ({ 
+  updateCurrentMessage,
+  submitCurrentMessage,
+  addAIResponse,
+  currentMessage,
+  setIsListening
+}) => {
   const { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
+  const [transcriptUpdated, setTranscriptUpdated] = useState(false);
+
+  // Update isListening state in parent component if the prop exists
+  useEffect(() => {
+    if (setIsListening && typeof setIsListening === 'function') {
+      setIsListening(isMicOn);
+    }
+  }, [isMicOn, setIsListening]);
+
+  // Simulate real-time speech-to-text transcription when microphone is on
+  useEffect(() => {
+    if (isMicOn && !transcriptUpdated && updateCurrentMessage && submitCurrentMessage && addAIResponse) {
+      // Simulate speech-to-text by gradually updating the current message
+      let text = '';
+      const fullText = "Speaking of jokes, can you tell me one?";
+      let index = 0;
+      
+      const intervalId = setInterval(() => {
+        if (index < fullText.length) {
+          text += fullText[index];
+          updateCurrentMessage(text);
+          index++;
+        } else {
+          clearInterval(intervalId);
+          
+          // Submit the transcribed message
+          submitCurrentMessage();
+          setTranscriptUpdated(true);
+          
+          // Simulate AI response after a short delay
+          setTimeout(() => {
+            addAIResponse("Sure! Why did the computer go to therapy? Because it had too many bytes of emotional baggage!");
+          }, 1500);
+        }
+      }, 100);
+      
+      return () => clearInterval(intervalId);
+    }
+  }, [isMicOn, transcriptUpdated, updateCurrentMessage, submitCurrentMessage, addAIResponse]);
+
+  // Reset transcript updated flag when microphone is turned off
+  useEffect(() => {
+    if (!isMicOn) {
+      setTranscriptUpdated(false);
+    }
+  }, [isMicOn]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen pb-24">
-      <div className="relative w-full max-w-md h-64 flex items-center justify-center">
-        <div className="relative flex gap-1 items-center h-full">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center h-full">
-              <div
-                ref={(el) => (barsRef.current[i] = el)}
-                className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
-                  ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
-                }`}
-              ></div>
-            </div>
-          ))}
-        </div>
-
-        <Tooltip
-          title={
-            <div className="text-center">
-              <strong>
-                {isConnecting
-                  ? "Connecting..."
-                  : isMicOn
-                  ? "Turn off microphone"
-                  : "Turn on microphone"}
-              </strong>
-            </div>
-          }
-          arrow
-          placement="bottom"
-        >
-          <div className="absolute top-52 left-1/2 -translate-x-1/2">
-            <div className="relative">
-              {isConnecting ? (
-                <Box sx={{ display: 'flex' }}>
-                  <CircularProgress size={40} sx={{ color: '#f97316' }} />
-                </Box>
-              ) : (
-                <IconButton
-                  onClick={isMicOn ? stopMicrophone : startMicrophone}
-                  className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
-                >
-                  {isMicOn ? (
-                    <MicIcon className="text-white text-4xl" />
-                  ) : (
-                    <MicOffIcon className="text-white text-4xl" />
-                  )}
-                </IconButton>
-              )}
-            </div>
+    <div className="relative w-full max-w-md h-64 flex items-center justify-center">
+      <div className="relative flex gap-1 items-center h-full">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center h-full">
+            <div
+              ref={(el) => (barsRef.current[i] = el)}
+              className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
+                ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
+              }`}
+            ></div>
           </div>
-        </Tooltip>
+        ))}
       </div>
+
+      <Tooltip
+        title={
+          <div className="text-center">
+            <strong>
+              {isConnecting
+                ? "Connecting..."
+                : isMicOn
+                ? "Turn off microphone"
+                : "Turn on microphone"}
+            </strong>
+          </div>
+        }
+        arrow
+        placement="bottom"
+      >
+        <div className="absolute top-52 left-1/2 -translate-x-1/2">
+          <div className="relative">
+            {isConnecting ? (
+              <Box sx={{ display: 'flex' }}>
+                <CircularProgress size={40} sx={{ color: '#f97316' }} />
+              </Box>
+            ) : (
+              <IconButton
+                onClick={isMicOn ? stopMicrophone : startMicrophone}
+                className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
+              >
+                {isMicOn ? (
+                  <MicIcon className="text-white text-4xl" />
+                ) : (
+                  <MicOffIcon className="text-white text-4xl" />
+                )}
+              </IconButton>
+            )}
+          </div>
+        </div>
+      </Tooltip>
     </div>
   );
 };

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node backend/server.js",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest"
   },
   "dependencies": {
     "@mui/icons-material": "^6.4.1",
@@ -19,21 +20,46 @@
     "next": "15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "uuid": "^11.0.5"
+    "uuid": "^11.0.5",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.8",
+    "@babel/preset-react": "^7.23.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@eslint/eslintrc": "^3",
     "@mui/material": "^6.4.1",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
     "autoprefixer": "^10.4.20",
+    "babel-jest": "^29.7.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "init": "^0.1.2",
     "install": "^0.13.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "npm": "^11.0.0",
     "npx": "^10.2.2",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "transform": {
+      "^.+\\.(js|jsx)$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!@mui)"
+    ]
   }
 }
