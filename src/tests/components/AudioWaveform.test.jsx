@@ -7,6 +7,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 
 // Create mock states
 let mockMicState = {
@@ -133,19 +135,20 @@ describe('AudioWaveform Component', () => {
     expect(waveformBars.length).toBe(5);
   });
 
-  test('displays mic off icon initially', () => {
+  test('displays Connect button initially', () => {
     render(
       <TestWrapper>
         <AudioWaveform {...mockProps} />
       </TestWrapper>
     );
     
-    // Should show the mic off icon initially
-    const micOffIcon = screen.getByTestId('MicOffIcon');
-    expect(micOffIcon).toBeInTheDocument();
+    // Should show the Connect button with Mic icon initially
+    const connectButton = screen.getByRole('button', { name: /connect/i });
+    expect(connectButton).toBeInTheDocument();
+    expect(connectButton).toHaveStyle('background-color: #25A969');
   });
 
-  test('shows loading state when connecting', () => {
+  test('shows Connecting button when connecting', () => {
     mockMicState.isConnecting = true;
     
     render(
@@ -154,9 +157,27 @@ describe('AudioWaveform Component', () => {
       </TestWrapper>
     );
     
-    // Should show circular progress during connection
-    const progressIndicator = screen.getByTestId('circular-progress');
-    expect(progressIndicator).toBeInTheDocument();
+    // Should show Connecting button with circular progress during connection
+    const connectingButton = screen.getByRole('button', { name: /connecting/i });
+    expect(connectingButton).toBeInTheDocument();
+    expect(connectingButton).toBeDisabled();
+    expect(connectingButton).toHaveStyle('background-color: #8FD5B2');
+    expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
+  });
+
+  test('shows Disconnect button when microphone is on', () => {
+    mockMicState.isMicOn = true;
+    
+    render(
+      <TestWrapper>
+        <AudioWaveform {...mockProps} />
+      </TestWrapper>
+    );
+    
+    // Should show the Disconnect button
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    expect(disconnectButton).toBeInTheDocument();
+    expect(disconnectButton).toHaveStyle('background-color: #F14C52');
   });
 
   test('toggles microphone on button click', async () => {
@@ -168,9 +189,9 @@ describe('AudioWaveform Component', () => {
       </TestWrapper>
     );
     
-    // Click mic button to turn it on
-    const micButton = screen.getByRole('button');
-    await user.click(micButton);
+    // Click Connect button to turn it on
+    const connectButton = screen.getByRole('button', { name: /connect/i });
+    await user.click(connectButton);
     
     // Update component to show connecting state
     mockMicState.isConnecting = true;
@@ -182,6 +203,8 @@ describe('AudioWaveform Component', () => {
     );
     
     // Should show connecting state
+    const connectingButton = screen.getByRole('button', { name: /connecting/i });
+    expect(connectingButton).toBeInTheDocument();
     expect(screen.getByTestId('circular-progress')).toBeInTheDocument();
     
     // Advance timers to complete connection
@@ -199,14 +222,14 @@ describe('AudioWaveform Component', () => {
       </TestWrapper>
     );
     
-    // Should now show mic on icon
-    const micOnIcon = screen.getByTestId('MicIcon');
-    expect(micOnIcon).toBeInTheDocument();
+    // Should now show Disconnect button
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    expect(disconnectButton).toBeInTheDocument();
     
     // Click again to turn off
-    await user.click(micButton);
+    await user.click(disconnectButton);
     
-    // Should show mic off icon again
+    // Should show Connect button again
     mockMicState.isMicOn = false;
     
     rerender(
@@ -215,8 +238,9 @@ describe('AudioWaveform Component', () => {
       </TestWrapper>
     );
     
-    const micOffIcon = screen.getByTestId('MicOffIcon');
-    expect(micOffIcon).toBeInTheDocument();
+    // Should show the Connect button again
+    const newConnectButton = screen.getByRole('button', { name: /connect/i });
+    expect(newConnectButton).toBeInTheDocument();
   });
 
   test('calls setIsListening when microphone state changes', async () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMicrophone } from "../hooks/useMicrophone";
-import { IconButton, Tooltip, Grid } from "@mui/material";
+import { IconButton, Tooltip, Grid, Button, Typography } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
@@ -65,6 +65,68 @@ const AudioWaveform = ({
     }
   }, [aiSpeakingState, setIsAISpeaking]);
 
+  // Helper function to render the appropriate button based on state
+  const renderConnectionButton = () => {
+    if (isConnecting) {
+      return (
+        <Button
+          disabled
+          sx={{
+            bgcolor: '#8FD5B2', // Light green
+            color: 'black',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+          startIcon={<CircularProgress size={20} sx={{ color: 'white' }} data-testid="circular-progress" />}
+        >
+          <Typography variant="body1" component="span" sx={{ ml: 1 }}>
+            Connecting
+          </Typography>
+        </Button>
+      );
+    } else if (isMicOn) {
+      return (
+        <Button
+          onClick={stopMicrophone}
+          sx={{
+            bgcolor: '#F14C52', // Red
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+        >
+          Disconnect
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          // variant="contained"
+          disableElevation
+          onClick={startMicrophone}
+          sx={{
+            bgcolor: '#25A969 !important',
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+          startIcon={<MicIcon />}
+        >
+          Connect
+        </Button>
+      );
+    }
+  };
+
   return (
     <div className="relative w-full max-w-md h-64 flex items-center justify-center">
       <div className="relative flex gap-1 items-center h-full">
@@ -97,22 +159,7 @@ const AudioWaveform = ({
       >
         <div className="absolute top-52 left-1/2 -translate-x-1/2">
           <div className="relative">
-            {isConnecting ? (
-              <Box sx={{ display: 'flex' }}>
-                <CircularProgress size={40} sx={{ color: '#f97316' }} />
-              </Box>
-            ) : (
-              <IconButton
-                onClick={isMicOn ? stopMicrophone : startMicrophone}
-                className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
-              >
-                {isMicOn ? (
-                  <MicIcon className="text-white text-4xl" />
-                ) : (
-                  <MicOffIcon className="text-white text-4xl" />
-                )}
-              </IconButton>
-            )}
+            {renderConnectionButton()}
           </div>
         </div>
       </Tooltip>
