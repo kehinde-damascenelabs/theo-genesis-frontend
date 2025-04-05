@@ -42,3 +42,5 @@ next-env.d.ts
 realtimeAPI/index.html
 Sandbox.js
 src/helper_func.js
+.cursor/rules/CODING_GUIDELINES.mdc
+src/Notes.md

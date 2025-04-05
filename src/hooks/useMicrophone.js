@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { startConnection } from "../service/realtimeAPI/startConnection";
 import { stopConnection } from "../service/realtimeAPI/stopConnection";
 import { createSilentAudio, requestWakeLock } from '../utils/helper_func';
 
-export const useMicrophone = () => {
+export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const connectionRef = useRef(null);
   const barsRef = useRef([]);
   const audioContextRef = useRef(null);
@@ -18,6 +19,22 @@ export const useMicrophone = () => {
   const gainNodeRef = useRef(null);
   const microphoneStreamRef = useRef(null);
   const remoteSourceRef = useRef(null);
+
+  const handleUserTranscript = useCallback((transcript) => {
+    if (onUserTranscript && typeof onUserTranscript === 'function') {
+      onUserTranscript(transcript);
+    }
+  }, [onUserTranscript]);
+
+  const handleAITranscript = useCallback((transcript) => {
+    if (onAITranscript && typeof onAITranscript === 'function') {
+      onAITranscript(transcript);
+    }
+  }, [onAITranscript]);
+
+  const handleAISpeakingStateChange = useCallback((isSpeaking) => {
+    setIsAISpeaking(isSpeaking);
+  }, []);
 
   const startMicrophone = async () => {
     try {
@@ -34,8 +51,13 @@ export const useMicrophone = () => {
       // Connect gain node to audio output
       gainNodeRef.current.connect(audioContextRef.current.destination);
       
-      // Start WebRTC connection
-      connectionRef.current = await startConnection();
+      // Start WebRTC connection with callbacks for transcript events
+      connectionRef.current = await startConnection({
+        onUserTranscript: handleUserTranscript,
+        onAITranscript: handleAITranscript,
+        onAISpeakingStateChange: handleAISpeakingStateChange
+      });
+      
       console.log("AI Connection started", connectionRef.current);
 
       // Mute the default audio element to prevent double playback
@@ -181,6 +203,7 @@ export const useMicrophone = () => {
     }
 
     setIsMicOn(false);
+    setIsAISpeaking(false);
   };
 
   useEffect(() => {
@@ -196,5 +219,12 @@ export const useMicrophone = () => {
     };
   }, [isMicOn]);
 
-  return { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef };
+  return { 
+    isMicOn, 
+    isConnecting, 
+    isAISpeaking,
+    startMicrophone, 
+    stopMicrophone, 
+    barsRef 
+  };
 };

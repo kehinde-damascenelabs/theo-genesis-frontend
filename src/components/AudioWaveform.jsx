@@ -1,68 +1,174 @@
 "use client";
 
 import { useMicrophone } from "../hooks/useMicrophone";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Grid, Button, Typography } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
+import { useEffect, useCallback } from "react";
 
-const AudioWaveform = () => {
-  const { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
+const AudioWaveform = ({ 
+  updateCurrentMessage,
+  submitCurrentMessage,
+  addAIResponse,
+  currentMessage,
+  setIsListening,
+  setIsAISpeaking,
+  handleUserTranscript,
+  handleAITranscript,
+  clearConversation
+}) => {
+  const onUserTranscript = useCallback((transcript) => {
+    if (handleUserTranscript && typeof handleUserTranscript === 'function') {
+      // Use the conversation hook's handler if provided
+      handleUserTranscript(transcript);
+    } else {
+      // Fall back to the older separate methods
+      updateCurrentMessage(transcript);
+      submitCurrentMessage();
+    }
+  }, [handleUserTranscript, updateCurrentMessage, submitCurrentMessage]);
+
+  const onAITranscript = useCallback((transcript) => {
+    if (handleAITranscript && typeof handleAITranscript === 'function') {
+      // Use the conversation hook's handler if provided
+      handleAITranscript(transcript);
+    } else {
+      // Fall back to the older method
+      addAIResponse(transcript);
+    }
+  }, [handleAITranscript, addAIResponse]);
+
+  const { 
+    isMicOn, 
+    isConnecting, 
+    isAISpeaking: aiSpeakingState,
+    startMicrophone, 
+    stopMicrophone, 
+    barsRef 
+  } = useMicrophone({
+    onUserTranscript: onUserTranscript,
+    onAITranscript: onAITranscript
+  });
+
+  // Update isListening state in parent component if the prop exists
+  useEffect(() => {
+    if (setIsListening && typeof setIsListening === 'function') {
+      setIsListening(isMicOn);
+    }
+  }, [isMicOn, setIsListening]);
+
+  // Update isAISpeaking state in parent component if the prop exists
+  useEffect(() => {
+    if (setIsAISpeaking && typeof setIsAISpeaking === 'function') {
+      setIsAISpeaking(aiSpeakingState);
+    }
+  }, [aiSpeakingState, setIsAISpeaking]);
+
+  // Helper function to render the appropriate button based on state
+  const renderConnectionButton = () => {
+    if (isConnecting) {
+      return (
+        <Button
+          disabled
+          sx={{
+            bgcolor: '#8FD5B2', // Light green
+            color: 'black',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+          startIcon={<CircularProgress size={20} sx={{ color: 'white' }} data-testid="circular-progress" />}
+        >
+          <Typography variant="body1" component="span" sx={{ ml: 1 }}>
+            Connecting
+          </Typography>
+        </Button>
+      );
+    } else if (isMicOn) {
+      return (
+        <Button
+          onClick={() => {
+            stopMicrophone();
+            if (clearConversation && typeof clearConversation === 'function') {
+              clearConversation();
+            }
+          }}
+          sx={{
+            bgcolor: '#F14C52', // Red
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+        >
+          Disconnect
+        </Button>
+      );
+    } else {
+      return (
+        <Button
+          // variant="contained"
+          disableElevation
+          onClick={startMicrophone}
+          sx={{
+            bgcolor: '#25A969 !important',
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+          startIcon={<MicIcon />}
+        >
+          Connect
+        </Button>
+      );
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen pb-24">
-      <div className="relative w-full max-w-md h-64 flex items-center justify-center">
-        <div className="relative flex gap-1 items-center h-full">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center h-full">
-              <div
-                ref={(el) => (barsRef.current[i] = el)}
-                className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
-                  ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
-                }`}
-              ></div>
-            </div>
-          ))}
-        </div>
-
-        <Tooltip
-          title={
-            <div className="text-center">
-              <strong>
-                {isConnecting
-                  ? "Connecting..."
-                  : isMicOn
-                  ? "Turn off microphone"
-                  : "Turn on microphone"}
-              </strong>
-            </div>
-          }
-          arrow
-          placement="bottom"
-        >
-          <div className="absolute top-52 left-1/2 -translate-x-1/2">
-            <div className="relative">
-              {isConnecting ? (
-                <Box sx={{ display: 'flex' }}>
-                  <CircularProgress size={40} sx={{ color: '#f97316' }} />
-                </Box>
-              ) : (
-                <IconButton
-                  onClick={isMicOn ? stopMicrophone : startMicrophone}
-                  className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition-all"
-                >
-                  {isMicOn ? (
-                    <MicIcon className="text-white text-4xl" />
-                  ) : (
-                    <MicOffIcon className="text-white text-4xl" />
-                  )}
-                </IconButton>
-              )}
-            </div>
+    <div className="relative w-full max-w-md h-64 flex items-center justify-center">
+      <div className="relative flex gap-1 items-center h-full">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center h-full">
+            <div
+              ref={(el) => (barsRef.current[i] = el)}
+              className={`w-10 min-h-[40px] rounded-lg transition-all duration-75 ${
+                ["bg-blue-300", "bg-blue-500", "bg-blue-700", "bg-yellow-400", "bg-orange-500"][i]
+              }`}
+            ></div>
           </div>
-        </Tooltip>
+        ))}
       </div>
+
+      <Tooltip
+        title={
+          <div className="text-center">
+            <strong>
+              {isConnecting
+                ? "Connecting..."
+                : isMicOn
+                ? "Turn off microphone"
+                : "Turn on microphone"}
+            </strong>
+          </div>
+        }
+        arrow
+        placement="bottom"
+      >
+        <div className="absolute top-52 left-1/2 -translate-x-1/2">
+          <div className="relative">
+            {renderConnectionButton()}
+          </div>
+        </div>
+      </Tooltip>
     </div>
   );
 };
