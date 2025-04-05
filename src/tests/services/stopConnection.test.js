@@ -6,18 +6,22 @@ describe('stopConnection', () => {
   
   // Create replacement mocks for console
   let originalConsoleLog;
+  let originalConsoleError;
   
   beforeAll(() => {
     // Save original console methods
     originalConsoleLog = console.log;
+    originalConsoleError = console.error;
     
     // Replace with mocks
     console.log = jest.fn();
+    console.error = jest.fn();
   });
   
   afterAll(() => {
     // Restore original console methods
     console.log = originalConsoleLog;
+    console.error = originalConsoleError;
   });
   
   beforeEach(() => {
@@ -137,22 +141,14 @@ describe('stopConnection', () => {
       throw new Error('Failed to close connection');
     });
     
-    // Mock console.error to track error logging
-    const originalConsoleError = console.error;
-    console.error = jest.fn();
-    
-    // Call the function directly in a try-catch block
-    try {
+    // Expect no error to be thrown
+    expect(() => {
       stopConnection(mockConnection);
-      // If we get here, the function didn't throw
-      expect(true).toBe(true); // Dummy assertion to indicate success
-    } catch (error) {
-      // If we get here, it means the function threw an error, which it shouldn't
-      expect(error).toBeUndefined(); // This will fail the test if an error is caught
-    }
+    }).not.toThrow();
     
-    // Restore console.error
-    console.error = originalConsoleError;
+    // Verify other cleanup operations still happened
+    expect(mockConnection.dc.close).toHaveBeenCalled();
+    expect(mockConnection.audioEl.pause).toHaveBeenCalled();
   });
   
   test('cleans up each component independently', () => {

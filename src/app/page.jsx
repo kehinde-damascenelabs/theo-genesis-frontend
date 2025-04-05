@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AudioWaveform from "@/components/AudioWaveform";
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
@@ -14,23 +14,24 @@ import ConversationTranscript from "@/components/ConversationTranscript";
 import { Grid } from '@mui/material';
 import { useConversation } from "@/hooks/useConversation";
 
-// Sample conversation for demo purposes
-const sampleConversation = [
-  { sender: 'user', text: 'Hello!' },
-  { sender: 'ai', text: 'Hi there! How can I assist you today?' },
-  { sender: 'user', text: "I'm curious about how you work. Can you explain a bit?" },
-  { sender: 'ai', text: "Of course! I'm powered by advanced natural language processing and machine learning algorithms that analyze your input and generate helpful responses based on patterns learned from a large amount of data." },
-];
-
 export default function Page(props) {
   const { 
     messages, 
     currentMessage, 
     updateCurrentMessage, 
     submitCurrentMessage, 
-    addAIResponse 
-  } = useConversation(sampleConversation);
+    addAIResponse,
+    handleUserTranscript,
+    handleAITranscript,
+    processingUserInput,
+    aiResponsePending
+  } = useConversation([]);
   const [isListening, setIsListening] = useState(false);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+
+  useEffect(() => {
+    setIsAISpeaking(aiResponsePending);
+  }, [aiResponsePending]);
 
   return (
     <AppTheme {...props}>
@@ -48,12 +49,17 @@ export default function Page(props) {
               addAIResponse={addAIResponse}
               currentMessage={currentMessage}
               setIsListening={setIsListening}
+              setIsAISpeaking={setIsAISpeaking}
+              handleUserTranscript={handleUserTranscript}
+              handleAITranscript={handleAITranscript}
+              processingUserInput={processingUserInput}
             />
           </Grid>
           <Grid item xs={12} md={6}>
             <ConversationTranscript 
               messages={messages}
               isListening={isListening}
+              isAISpeaking={isAISpeaking}
               currentMessage={currentMessage}
             />
           </Grid>

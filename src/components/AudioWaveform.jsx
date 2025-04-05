@@ -6,17 +6,50 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
-import { useEffect, useState } from "react";
+import { useEffect, useCallback } from "react";
 
 const AudioWaveform = ({ 
   updateCurrentMessage,
   submitCurrentMessage,
   addAIResponse,
   currentMessage,
-  setIsListening
+  setIsListening,
+  setIsAISpeaking,
+  handleUserTranscript,
+  handleAITranscript
 }) => {
-  const { isMicOn, isConnecting, startMicrophone, stopMicrophone, barsRef } = useMicrophone();
-  const [transcriptUpdated, setTranscriptUpdated] = useState(false);
+  const onUserTranscript = useCallback((transcript) => {
+    if (handleUserTranscript && typeof handleUserTranscript === 'function') {
+      // Use the conversation hook's handler if provided
+      handleUserTranscript(transcript);
+    } else {
+      // Fall back to the older separate methods
+      updateCurrentMessage(transcript);
+      submitCurrentMessage();
+    }
+  }, [handleUserTranscript, updateCurrentMessage, submitCurrentMessage]);
+
+  const onAITranscript = useCallback((transcript) => {
+    if (handleAITranscript && typeof handleAITranscript === 'function') {
+      // Use the conversation hook's handler if provided
+      handleAITranscript(transcript);
+    } else {
+      // Fall back to the older method
+      addAIResponse(transcript);
+    }
+  }, [handleAITranscript, addAIResponse]);
+
+  const { 
+    isMicOn, 
+    isConnecting, 
+    isAISpeaking: aiSpeakingState,
+    startMicrophone, 
+    stopMicrophone, 
+    barsRef 
+  } = useMicrophone({
+    onUserTranscript: onUserTranscript,
+    onAITranscript: onAITranscript
+  });
 
   // Update isListening state in parent component if the prop exists
   useEffect(() => {
@@ -25,43 +58,12 @@ const AudioWaveform = ({
     }
   }, [isMicOn, setIsListening]);
 
-  // Simulate real-time speech-to-text transcription when microphone is on
+  // Update isAISpeaking state in parent component if the prop exists
   useEffect(() => {
-    if (isMicOn && !transcriptUpdated && updateCurrentMessage && submitCurrentMessage && addAIResponse) {
-      // Simulate speech-to-text by gradually updating the current message
-      let text = '';
-      const fullText = "Speaking of jokes, can you tell me one?";
-      let index = 0;
-      
-      const intervalId = setInterval(() => {
-        if (index < fullText.length) {
-          text += fullText[index];
-          updateCurrentMessage(text);
-          index++;
-        } else {
-          clearInterval(intervalId);
-          
-          // Submit the transcribed message
-          submitCurrentMessage();
-          setTranscriptUpdated(true);
-          
-          // Simulate AI response after a short delay
-          setTimeout(() => {
-            addAIResponse("Sure! Why did the computer go to therapy? Because it had too many bytes of emotional baggage!");
-          }, 1500);
-        }
-      }, 100);
-      
-      return () => clearInterval(intervalId);
+    if (setIsAISpeaking && typeof setIsAISpeaking === 'function') {
+      setIsAISpeaking(aiSpeakingState);
     }
-  }, [isMicOn, transcriptUpdated, updateCurrentMessage, submitCurrentMessage, addAIResponse]);
-
-  // Reset transcript updated flag when microphone is turned off
-  useEffect(() => {
-    if (!isMicOn) {
-      setTranscriptUpdated(false);
-    }
-  }, [isMicOn]);
+  }, [aiSpeakingState, setIsAISpeaking]);
 
   return (
     <div className="relative w-full max-w-md h-64 flex items-center justify-center">

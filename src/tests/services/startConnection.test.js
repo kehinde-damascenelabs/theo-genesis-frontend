@@ -83,8 +83,15 @@ describe('startConnection', () => {
   });
   
   test('successfully establishes a WebRTC connection', async () => {
-    // Call the function
-    const result = await startConnection();
+    // Mock callbacks
+    const mockCallbacks = {
+      onUserTranscript: jest.fn(),
+      onAITranscript: jest.fn(),
+      onAISpeakingStateChange: jest.fn()
+    };
+    
+    // Call the function with callbacks
+    const result = await startConnection(mockCallbacks);
     
     // Verify ephemeral key was fetched
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:3000/getEKey');
@@ -137,12 +144,28 @@ describe('startConnection', () => {
     )[1];
     openEventHandler();
     
-    // Verify initial AI response was sent
+    // Verify initial messages were sent
     expect(mockDataChannel.send).toHaveBeenCalledWith(
       JSON.stringify({
-        type: 'response.create',
-        response: { 
-          modalities: ['text', 'audio']
+        type: 'response.create'
+      })
+    );
+    
+    expect(mockDataChannel.send).toHaveBeenCalledWith(
+      JSON.stringify({
+        type: 'session.update',
+        session: {
+          modalities: ['text', 'audio'],
+          input_audio_transcription: { model: 'whisper-1' },
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 1000,
+            create_response: true,
+          },
+          temperature: 0.7,
+          max_response_output_tokens: 4096,
         }
       })
     );
@@ -239,5 +262,71 @@ describe('startConnection', () => {
     
     // Restore console.error
     console.error = originalConsoleError;
+  });
+  
+  test('calls transcript callbacks when receiving transcript events', async () => {
+    // Mock callbacks
+    const mockCallbacks = {
+      onUserTranscript: jest.fn(),
+      onAITranscript: jest.fn(),
+      onAISpeakingStateChange: jest.fn()
+    };
+    
+    // Call the function with callbacks
+    const result = await startConnection(mockCallbacks);
+    
+    // Capture the message event handler
+    const messageHandler = mockDataChannel.addEventListener.mock.calls.find(
+      call => call[0] === 'message'
+    )[1];
+    
+    // Mock AI transcript event
+    const aiTranscriptEvent = {
+      data: JSON.stringify({
+        type: 'response.audio_transcript.done',
+        transcript: 'This is an AI transcript'
+      })
+    };
+    
+    // Trigger AI transcript event
+    messageHandler(aiTranscriptEvent);
+    
+    // Verify AI transcript callback was called
+    expect(mockCallbacks.onAITranscript).toHaveBeenCalledWith('This is an AI transcript');
+    
+    // Mock user transcript event
+    const userTranscriptEvent = {
+      data: JSON.stringify({
+        type: 'conversation.item.input_audio_transcription.completed',
+        transcript: 'This is a user transcript'
+      })
+    };
+    
+    // Trigger user transcript event
+    messageHandler(userTranscriptEvent);
+    
+    // Verify user transcript callback was called
+    expect(mockCallbacks.onUserTranscript).toHaveBeenCalledWith('This is a user transcript');
+    
+    // Mock AI speaking state events
+    const aiSpeakingStartEvent = {
+      data: JSON.stringify({
+        type: 'response.audio.generation.started'
+      })
+    };
+    
+    const aiSpeakingEndEvent = {
+      data: JSON.stringify({
+        type: 'response.audio.generation.done'
+      })
+    };
+    
+    // Trigger AI speaking state events
+    messageHandler(aiSpeakingStartEvent);
+    messageHandler(aiSpeakingEndEvent);
+    
+    // Verify AI speaking state callbacks were called
+    expect(mockCallbacks.onAISpeakingStateChange).toHaveBeenCalledWith(true);
+    expect(mockCallbacks.onAISpeakingStateChange).toHaveBeenCalledWith(false);
   });
 }); 
