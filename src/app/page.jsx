@@ -43,7 +43,13 @@ export default function Page(props) {
       <Divider />
       <div className="flex flex-col items-center justify-center min-h-screen pb-24">
         <Grid container spacing={3} sx={{ maxWidth: '1200px', width: '100%' }}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ 
+            '@media (max-width: 900px)': {
+              display: 'flex',
+              justifyContent: 'center',
+              order: 2
+            }
+          }}>
             <AudioWaveform 
               updateCurrentMessage={updateCurrentMessage}
               submitCurrentMessage={submitCurrentMessage}
@@ -57,7 +63,11 @@ export default function Page(props) {
               clearConversation={clearConversation}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ 
+            '@media (max-width: 900px)': {
+              order: 1
+            }
+          }}>
             <ConversationTranscript 
               messages={messages}
               isListening={isListening}

@@ -134,8 +134,8 @@ const AudioWaveform = ({
   };
 
   return (
-    <div className="relative w-full max-w-md h-64 flex items-center justify-center">
-      <div className="relative flex gap-1 items-center h-full">
+    <div className="relative w-full max-w-md h-64 flex flex-col items-center justify-center">
+      <div className="relative flex gap-1 items-center justify-center h-full">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center h-full">
             <div
@@ -163,11 +163,25 @@ const AudioWaveform = ({
         arrow
         placement="bottom"
       >
-        <div className="absolute top-52 left-1/2 -translate-x-1/2">
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '13rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            '@media (max-width: 900px)': {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              transform: 'none',
+              marginTop: '0.5rem'
+            }
+          }}
+        >
           <div className="relative">
             {renderConnectionButton()}
           </div>
-        </div>
+        </Box>
       </Tooltip>
     </div>
   );
