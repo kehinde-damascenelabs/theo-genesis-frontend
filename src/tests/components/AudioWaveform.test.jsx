@@ -96,7 +96,8 @@ const mockProps = {
   submitCurrentMessage: jest.fn(),
   addAIResponse: jest.fn(),
   currentMessage: '',
-  setIsListening: jest.fn()
+  setIsListening: jest.fn(),
+  clearConversation: jest.fn()
 };
 
 describe('AudioWaveform Component', () => {
@@ -298,5 +299,26 @@ describe('AudioWaveform Component', () => {
     );
     
     expect(screen.getByTestId('tooltip-text').textContent).toBe('Turn off microphone');
+  });
+
+  test('calls clearConversation when Disconnect button is clicked', async () => {
+    mockMicState.isMicOn = true;
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    
+    render(
+      <TestWrapper>
+        <AudioWaveform {...mockProps} />
+      </TestWrapper>
+    );
+    
+    // Find the Disconnect button
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    expect(disconnectButton).toBeInTheDocument();
+    
+    // Click the Disconnect button
+    await user.click(disconnectButton);
+    
+    // Verify that clearConversation was called
+    expect(mockProps.clearConversation).toHaveBeenCalledTimes(1);
   });
 }); 

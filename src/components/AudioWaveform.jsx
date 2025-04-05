@@ -16,7 +16,8 @@ const AudioWaveform = ({
   setIsListening,
   setIsAISpeaking,
   handleUserTranscript,
-  handleAITranscript
+  handleAITranscript,
+  clearConversation
 }) => {
   const onUserTranscript = useCallback((transcript) => {
     if (handleUserTranscript && typeof handleUserTranscript === 'function') {
@@ -90,7 +91,12 @@ const AudioWaveform = ({
     } else if (isMicOn) {
       return (
         <Button
-          onClick={stopMicrophone}
+          onClick={() => {
+            stopMicrophone();
+            if (clearConversation && typeof clearConversation === 'function') {
+              clearConversation();
+            }
+          }}
           sx={{
             bgcolor: '#F14C52', // Red
             color: 'white',

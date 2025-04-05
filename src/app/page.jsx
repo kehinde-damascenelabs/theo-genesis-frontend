@@ -24,7 +24,8 @@ export default function Page(props) {
     handleUserTranscript,
     handleAITranscript,
     processingUserInput,
-    aiResponsePending
+    aiResponsePending,
+    clearConversation
   } = useConversation([]);
   const [isListening, setIsListening] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -53,6 +54,7 @@ export default function Page(props) {
               handleUserTranscript={handleUserTranscript}
               handleAITranscript={handleAITranscript}
               processingUserInput={processingUserInput}
+              clearConversation={clearConversation}
             />
           </Grid>
           <Grid item xs={12} md={6}>

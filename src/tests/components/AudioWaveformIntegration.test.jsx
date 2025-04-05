@@ -62,6 +62,11 @@ function IntegratedComponents() {
     setMessages([...messages, { sender: 'ai', text }]);
   };
   
+  const clearConversation = () => {
+    setMessages([]);
+    setCurrentMessage('');
+  };
+  
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>
@@ -71,6 +76,7 @@ function IntegratedComponents() {
           addAIResponse={addAIResponse}
           currentMessage={currentMessage}
           setIsListening={setIsListening}
+          clearConversation={clearConversation}
         />
       </Grid>
       <Grid item xs={12} md={6}>
@@ -127,5 +133,34 @@ describe('AudioWaveform with ConversationTranscript Integration', () => {
     // Check initial conversation is loaded properly
     expect(screen.getByText(/I'm curious about how you work/i)).toBeInTheDocument();
     expect(screen.getByText(/I'm powered by advanced natural language processing/i)).toBeInTheDocument();
+  });
+
+  test('clears conversation transcript when Disconnect button is clicked', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    
+    // Set microphone to on to show Disconnect button
+    mockMicState.isMicOn = true;
+    
+    render(
+      <TestWrapper>
+        <IntegratedComponents />
+      </TestWrapper>
+    );
+    
+    // Verify initial conversation is displayed
+    expect(screen.getByText(/Hello!/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hi there! How can I assist you today?/i)).toBeInTheDocument();
+    
+    // Find and click Disconnect button
+    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    await user.click(disconnectButton);
+
+    // Wait for state updates
+    await waitFor(() => {
+      // Verify conversation has been cleared
+      expect(screen.queryByText(/Hello!/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Hi there! How can I assist you today?/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/I'm curious about how you work/i)).not.toBeInTheDocument();
+    });
   });
 }); 
