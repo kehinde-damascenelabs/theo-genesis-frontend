@@ -11,6 +11,8 @@ import Hero from '@/components/Hero';
 import Comment from '@/components/Comment';
 import Footer from '@/components/Footer';
 import ConversationTranscript from "@/components/ConversationTranscript";
+import PlaceDetailsPanel from "@/components/PlaceDetailsPanel";
+import PanelCarousel from "@/components/PanelCarousel";
 import { Grid } from '@mui/material';
 import { useConversation } from "@/hooks/useConversation";
 
@@ -29,6 +31,9 @@ export default function Page(props) {
   } = useConversation([]);
   const [isListening, setIsListening] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  
+  // Default place ID for Eleven Madison Park from environment variables
+  const placeId = process.env.NEXT_PUBLIC_ELEVEN_MADISON_PARK_PLACE_ID || "ChIJEWbXz6ZZwokRLKmKrtPfVFY";
 
   useEffect(() => {
     setIsAISpeaking(aiResponsePending);
@@ -68,11 +73,20 @@ export default function Page(props) {
               order: 1
             }
           }}>
-            <ConversationTranscript 
-              messages={messages}
-              isListening={isListening}
-              isAISpeaking={isAISpeaking}
-              currentMessage={currentMessage}
+            <PanelCarousel
+              transcriptPanel={
+                <ConversationTranscript 
+                  messages={messages}
+                  isListening={isListening}
+                  isAISpeaking={isAISpeaking}
+                  currentMessage={currentMessage}
+                />
+              }
+              placeDetailsPanel={
+                <PlaceDetailsPanel 
+                  placeId={placeId}
+                />
+              }
             />
           </Grid>
         </Grid>
