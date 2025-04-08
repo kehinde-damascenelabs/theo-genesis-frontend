@@ -90,7 +90,7 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel }) => {
           onClick={() => handleTabClick(1)}
           data-testid="place-details-tab"
         >
-          <Typography>Place Details</Typography>
+          <Typography>Restaurant Info</Typography>
         </NavigationTab>
       </NavigationContainer>
       
@@ -101,7 +101,7 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel }) => {
         {/* Transcript Panel */}
         <Box data-testid="transcript-panel-container">{transcriptPanel}</Box>
         
-        {/* Place Details Panel */}
+        {/* Restaurant Info */}
         <Box data-testid="place-details-panel-container">{placeDetailsPanel}</Box>
       </StyledSlider>
     </CarouselContainer>
