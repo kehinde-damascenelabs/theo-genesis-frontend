@@ -24,7 +24,6 @@ const PlaceDetailsContent = styled(Box)(({ theme }) => ({
   padding: theme.spacing(0),
   position: 'relative',
   overflow: 'auto',
-  color: '#000',
 }));
 
 const PlaceDetailsPanel = ({ placeId }) => {

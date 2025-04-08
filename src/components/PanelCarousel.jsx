@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import SwipeableViews from 'react-swipeable-views';
+import Slider from 'react-slick';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const CarouselContainer = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -29,6 +31,19 @@ const NavigationTab = styled(Box)(({ theme }) => ({
   }
 }));
 
+const StyledSlider = styled(Slider)({
+  width: '100%',
+  '& .slick-track': {
+    display: 'flex',
+    '& .slick-slide': {
+      height: 'inherit',
+      '& > div': {
+        height: '100%',
+      }
+    }
+  }
+});
+
 const PanelCarousel = ({ transcriptPanel, placeDetailsPanel }) => {
   const theme = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -39,7 +54,26 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel }) => {
 
   const handleTabClick = (index) => {
     setActiveIndex(index);
+    if (sliderRef) {
+      sliderRef.slickGoTo(index);
+    }
   };
+
+  // Settings for the Slider component
+  const settings = {
+    dots: false,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    afterChange: handleChangeIndex,
+    swipe: true,
+    swipeToSlide: true,
+    touchThreshold: 10,
+    arrows: false,
+  };
+
+  let sliderRef = null;
 
   return (
     <CarouselContainer>
@@ -60,19 +94,16 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel }) => {
         </NavigationTab>
       </NavigationContainer>
       
-      <SwipeableViews
-        index={activeIndex}
-        onChangeIndex={handleChangeIndex}
-        enableMouseEvents
-        resistance
-        animateTransitions
+      <StyledSlider
+        ref={slider => (sliderRef = slider)}
+        {...settings}
       >
         {/* Transcript Panel */}
         <Box data-testid="transcript-panel-container">{transcriptPanel}</Box>
         
         {/* Place Details Panel */}
         <Box data-testid="place-details-panel-container">{placeDetailsPanel}</Box>
-      </SwipeableViews>
+      </StyledSlider>
     </CarouselContainer>
   );
 };
