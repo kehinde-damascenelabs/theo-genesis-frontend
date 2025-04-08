@@ -30,7 +30,7 @@ const PlaceDetailsContent = styled(Box)(({ theme }) => ({
 const PlaceDetailsPanel = ({ placeId }) => {
   const theme = useTheme();
   const containerRef = useRef(null);
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || 'AIzaSyC8SEUtSg3hfqyDqjnCreK54uSeh7XGGNQ';
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 
   useEffect(() => {
     // Only load if the component is mounted and placeId is provided
