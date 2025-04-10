@@ -13,6 +13,7 @@ import Footer from '@/components/Footer';
 import ConversationTranscript from "@/components/ConversationTranscript";
 import PlaceDetailsPanel from "@/components/PlaceDetailsPanel";
 import PanelCarousel from "@/components/PanelCarousel";
+import MenuConsole from "@/components/MenuConsole";
 import { Grid } from '@mui/material';
 import { useConversation } from "@/hooks/useConversation";
 
@@ -86,6 +87,9 @@ export default function Page(props) {
                 <PlaceDetailsPanel 
                   placeId={placeId}
                 />
+              }
+              menuConsolePanel={
+                <MenuConsole />
               }
             />
           </Grid>

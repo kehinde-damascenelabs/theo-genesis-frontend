@@ -8,6 +8,7 @@ const theme = createTheme();
 describe('PanelCarousel', () => {
   const mockTranscriptPanel = <div data-testid="transcript-content">Transcript Content</div>;
   const mockPlaceDetailsPanel = <div data-testid="place-details-content">Place Details Content</div>;
+  const mockMenuConsolePanel = <div data-testid="menu-content">Menu Content</div>;
   
   it('renders transcript panel visible by default', () => {
     render(
@@ -15,6 +16,7 @@ describe('PanelCarousel', () => {
         <PanelCarousel 
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
+          menuConsolePanel={mockMenuConsolePanel}
         />
       </ThemeProvider>
     );
@@ -24,65 +26,68 @@ describe('PanelCarousel', () => {
     expect(transcriptContainer).toBeInTheDocument();
     expect(transcriptContainer).toContainElement(screen.getByTestId('transcript-content'));
     
-    // Verify slider navigation elements are rendered
-    expect(screen.getByTestId('panel-slider')).toBeInTheDocument();
-    expect(screen.getByTestId('transcript-label')).toBeInTheDocument();
-    expect(screen.getByTestId('place-details-label')).toBeInTheDocument();
-    
-    // Verify tab indicators are rendered
-    expect(screen.getByTestId('tab-indicator-0')).toBeInTheDocument();
-    expect(screen.getByTestId('tab-indicator-1')).toBeInTheDocument();
+    // Verify tabs are rendered
+    expect(screen.getByText('Transcript')).toBeInTheDocument();
+    expect(screen.getByText('Restaurant Info')).toBeInTheDocument();
+    expect(screen.getByText('Menu')).toBeInTheDocument();
   });
   
-  it('switches to place details panel when clicking the place details label', () => {
+  it('switches to place details panel when clicking the place details tab', () => {
     render(
       <ThemeProvider theme={theme}>
         <PanelCarousel 
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
+          menuConsolePanel={mockMenuConsolePanel}
         />
       </ThemeProvider>
     );
     
-    // Initially transcript panel should be active
-    const transcriptLabel = screen.getByTestId('transcript-label');
-    const placeDetailsLabel = screen.getByTestId('place-details-label');
+    // Initially transcript tab should be active
+    const transcriptTab = screen.getByTestId('transcript-tab');
+    const placeDetailsTab = screen.getByTestId('place-details-tab');
     
-    // Verify transcript label is active
-    expect(transcriptLabel.getAttribute('data-active')).toBe('true');
-    expect(placeDetailsLabel.getAttribute('data-active')).toBe('false');
+    // Verify transcript tab is active
+    expect(transcriptTab.getAttribute('data-active')).toBe('true');
+    expect(placeDetailsTab.getAttribute('data-active')).toBe('false');
     
-    // Click the place details label
-    fireEvent.click(placeDetailsLabel);
+    // Click the place details tab
+    fireEvent.click(placeDetailsTab);
     
-    // Place details label should now be active
-    expect(placeDetailsLabel.getAttribute('data-active')).toBe('true');
-    expect(transcriptLabel.getAttribute('data-active')).toBe('false');
+    // Place details tab should now be active
+    expect(placeDetailsTab.getAttribute('data-active')).toBe('true');
+    expect(transcriptTab.getAttribute('data-active')).toBe('false');
   });
   
-  it('renders tab indicators correctly', () => {
+  it('switches to menu console panel when clicking the menu tab', () => {
     render(
       <ThemeProvider theme={theme}>
         <PanelCarousel 
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
+          menuConsolePanel={mockMenuConsolePanel}
         />
       </ThemeProvider>
     );
     
-    // Get indicators by test IDs
-    const indicator0 = screen.getByTestId('tab-indicator-0');
-    const indicator1 = screen.getByTestId('tab-indicator-1');
+    // Initially transcript tab should be active
+    const transcriptTab = screen.getByTestId('transcript-tab');
+    const menuTab = screen.getByTestId('menu-console-tab');
     
-    // First indicator should be active by default
-    expect(indicator0.getAttribute('data-active')).toBe('true');
-    expect(indicator1.getAttribute('data-active')).toBe('false');
+    // Verify transcript tab is active
+    expect(transcriptTab.getAttribute('data-active')).toBe('true');
+    expect(menuTab.getAttribute('data-active')).toBe('false');
     
-    // Click the second indicator
-    fireEvent.click(indicator1);
+    // Click the menu tab
+    fireEvent.click(menuTab);
     
-    // Now second indicator should be active
-    expect(indicator0.getAttribute('data-active')).toBe('false');
-    expect(indicator1.getAttribute('data-active')).toBe('true');
+    // Menu tab should now be active
+    expect(menuTab.getAttribute('data-active')).toBe('true');
+    expect(transcriptTab.getAttribute('data-active')).toBe('false');
+    
+    // Menu content should be visible
+    const menuContainer = screen.getByTestId('menu-console-panel-container');
+    expect(menuContainer).toBeInTheDocument();
+    expect(menuContainer).toContainElement(screen.getByTestId('menu-content'));
   });
 }); 
