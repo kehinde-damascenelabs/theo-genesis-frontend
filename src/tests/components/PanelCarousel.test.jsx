@@ -9,6 +9,7 @@ describe('PanelCarousel', () => {
   const mockTranscriptPanel = <div data-testid="transcript-content">Transcript Content</div>;
   const mockPlaceDetailsPanel = <div data-testid="place-details-content">Place Details Content</div>;
   const mockMenuConsolePanel = <div data-testid="menu-content">Menu Content</div>;
+  const mockCalendarPanel = <div data-testid="calendar-content">Calendar Content</div>;
   
   it('renders transcript panel visible by default', () => {
     render(
@@ -17,6 +18,7 @@ describe('PanelCarousel', () => {
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
           menuConsolePanel={mockMenuConsolePanel}
+          calendarPanel={mockCalendarPanel}
         />
       </ThemeProvider>
     );
@@ -30,6 +32,7 @@ describe('PanelCarousel', () => {
     expect(screen.getByText('Transcript')).toBeInTheDocument();
     expect(screen.getByText('Restaurant Info')).toBeInTheDocument();
     expect(screen.getByText('Menu')).toBeInTheDocument();
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
   
   it('switches to place details panel when clicking the place details tab', () => {
@@ -39,6 +42,7 @@ describe('PanelCarousel', () => {
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
           menuConsolePanel={mockMenuConsolePanel}
+          calendarPanel={mockCalendarPanel}
         />
       </ThemeProvider>
     );
@@ -66,6 +70,7 @@ describe('PanelCarousel', () => {
           transcriptPanel={mockTranscriptPanel}
           placeDetailsPanel={mockPlaceDetailsPanel}
           menuConsolePanel={mockMenuConsolePanel}
+          calendarPanel={mockCalendarPanel}
         />
       </ThemeProvider>
     );
@@ -89,5 +94,38 @@ describe('PanelCarousel', () => {
     const menuContainer = screen.getByTestId('menu-console-panel-container');
     expect(menuContainer).toBeInTheDocument();
     expect(menuContainer).toContainElement(screen.getByTestId('menu-content'));
+  });
+  
+  it('switches to calendar panel when clicking the calendar tab', () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <PanelCarousel 
+          transcriptPanel={mockTranscriptPanel}
+          placeDetailsPanel={mockPlaceDetailsPanel}
+          menuConsolePanel={mockMenuConsolePanel}
+          calendarPanel={mockCalendarPanel}
+        />
+      </ThemeProvider>
+    );
+    
+    // Initially transcript tab should be active
+    const transcriptTab = screen.getByTestId('transcript-tab');
+    const calendarTab = screen.getByTestId('calendar-tab');
+    
+    // Verify transcript tab is active
+    expect(transcriptTab.getAttribute('data-active')).toBe('true');
+    expect(calendarTab.getAttribute('data-active')).toBe('false');
+    
+    // Click the calendar tab
+    fireEvent.click(calendarTab);
+    
+    // Calendar tab should now be active
+    expect(calendarTab.getAttribute('data-active')).toBe('true');
+    expect(transcriptTab.getAttribute('data-active')).toBe('false');
+    
+    // Calendar content should be visible
+    const calendarContainer = screen.getByTestId('calendar-panel-container');
+    expect(calendarContainer).toBeInTheDocument();
+    expect(calendarContainer).toContainElement(screen.getByTestId('calendar-content'));
   });
 }); 

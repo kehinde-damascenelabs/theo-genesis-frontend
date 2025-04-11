@@ -14,6 +14,7 @@ import ConversationTranscript from "@/components/ConversationTranscript";
 import PlaceDetailsPanel from "@/components/PlaceDetailsPanel";
 import PanelCarousel from "@/components/PanelCarousel";
 import MenuConsole from "@/components/MenuConsole";
+import CalendarConsole from "@/components/CalendarConsole";
 import { Grid } from '@mui/material';
 import { useConversation } from "@/hooks/useConversation";
 
@@ -90,6 +91,9 @@ export default function Page(props) {
               }
               menuConsolePanel={
                 <MenuConsole />
+              }
+              calendarPanel={
+                <CalendarConsole />
               }
             />
           </Grid>

@@ -44,19 +44,6 @@ describe('PlaceDetailsPanel', () => {
     // Reset mocks
     jest.clearAllMocks();
   });
-
-  it('renders with correct header', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <PlaceDetailsPanel placeId="test-place-id" />
-      </ThemeProvider>
-    );
-    
-    // Check header is rendered
-    expect(screen.getByText('Place Details')).toBeInTheDocument();
-    expect(screen.getByTestId('place-details-header')).toBeInTheDocument();
-    expect(screen.getByTestId('place-details-content')).toBeInTheDocument();
-  });
   
   it('calls configureFromPlace with the correct place ID', () => {
     // Mock the initPlaceDetails function

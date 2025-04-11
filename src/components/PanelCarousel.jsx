@@ -44,7 +44,7 @@ const StyledSlider = styled(Slider)({
   }
 });
 
-const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel }) => {
+const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, calendarPanel }) => {
   const theme = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -99,6 +99,13 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel })
         >
           <Typography>Menu</Typography>
         </NavigationTab>
+        <NavigationTab 
+          data-active={activeIndex === 3} 
+          onClick={() => handleTabClick(3)}
+          data-testid="calendar-tab"
+        >
+          <Typography>Calendar</Typography>
+        </NavigationTab>
       </NavigationContainer>
       
       <StyledSlider
@@ -113,6 +120,9 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel })
         
         {/* Menu Console */}
         <Box data-testid="menu-console-panel-container">{menuConsolePanel}</Box>
+        
+        {/* Calendar Panel */}
+        <Box data-testid="calendar-panel-container">{calendarPanel}</Box>
       </StyledSlider>
     </CarouselContainer>
   );
