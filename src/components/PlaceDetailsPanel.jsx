@@ -30,7 +30,6 @@ const PlaceDetailsPanel = ({ placeId }) => {
   const theme = useTheme();
   const containerRef = useRef(null);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-
   useEffect(() => {
     // Only load if the component is mounted and placeId is provided
     if (containerRef.current && placeId) {
