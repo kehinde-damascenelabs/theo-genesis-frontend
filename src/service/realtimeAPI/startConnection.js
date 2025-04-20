@@ -3,9 +3,9 @@ import fns from '../function_calling';
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
     // For development, you might use a local endpoint (uncomment below if needed)
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -156,7 +156,107 @@ export async function startConnection(callbacks = {}) {
                 },
                 required: ["zipCode"],
               }
-            }
+            },
+            {
+              type: "function",
+              name: "createReservationEvent",
+              description: 
+                "Creates a new restaurant reservation. Schedules the event in the user's Google Calendar and returns the created event details.",
+              parameters: {
+                type: "object",
+                properties: {
+                    name: {
+                      type: "string",
+                      description: "Name of the person making the reservation"
+                    },
+                  date: {
+                    type: "string",
+                    description: "Date of the reservation in YYYY-MM-DD format"
+                  },
+                  time: {
+                    type: "string",
+                    description: "Time of the reservation in HH:MM format (24-hour)"
+                  },
+                  partySize: {
+                    type: "integer",
+                    description: "Number of people in the reservation"
+                  },
+                  email: {
+                    type: "string",
+                    description: "Contact email for the reservation"
+                  },
+                  restaurantName: {
+                    type: "string",
+                    description: "Name of the restaurant for the reservation"
+                  },
+                  restaurantAddress: {
+                    type: "string",
+                    description: "Address of the restaurant"
+                  }
+                },
+                required: ["date", "name", "time", "partySize", "email", "restaurantName", "restaurantAddress"]
+              }
+            },
+            {
+              type: "function",
+              name: "updateReservationEvent",
+              description:
+                "Updates an existing restaurant reservation. Only specified fields will be updated.",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person who made the reservation (used to identify the reservation)"
+                  },
+                  date: {
+                    type: "string",
+                    description: "Date of the reservation in YYYY-MM-DD format"
+                  },
+                  time: {
+                    type: "string",
+                    description: "Time of the reservation in HH:MM format (24-hour)"
+                  },
+                  partySize: {
+                    type: "integer",
+                    description: "Number of people in the reservation"
+                  },
+                  email: {
+                    type: "string",
+                    description: "Contact email for the reservation"
+                  },
+                  restaurantName: {
+                    type: "string",
+                    description: "Name of the restaurant for the reservation"
+                  },
+                  restaurantAddress: {
+                    type: "string",
+                    description: "Address of the restaurant"
+                  },
+                  newName: {
+                    type: "string",
+                    description: "New name for the person making the reservation (if changing the name)"
+                  }
+                },
+                required: ["name"]
+              }
+            },
+            {
+              type: "function",
+              name: "deleteReservationEvent",
+              description:
+                "Deletes an existing restaurant reservation.",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person who made the reservation to delete"
+                  }
+                },
+                required: ["name"]
+              }
+            },
           ],
           tool_choice: "auto",
       },

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -26,17 +26,55 @@ const ResponsiveCalendarFrame = styled('iframe')(({ theme }) => ({
   borderRadius: theme.spacing(1),
 }));
 
-const CalendarConsole = () => {
+// Create a global refresh function only on the client side
+const CalendarConsole = forwardRef((props, ref) => {
   const theme = useTheme();
+  const iframeRef = useRef(null);
+  const [key, setKey] = useState(0);
+  
+  // Method to refresh the calendar
+  const refreshCalendar = () => {
+    console.log("Refreshing calendar...");
+    setKey(prev => prev + 1);
+  };
+
+  // Expose the refresh method via ref
+  useImperativeHandle(ref, () => ({
+    refreshCalendar
+  }));
+
+  // Store the refresh function globally for direct access, but only in browser
+  useEffect(() => {
+    // Only run in browser environment
+    if (typeof window !== 'undefined') {
+      // Create the calendarRefresh object if it doesn't exist
+      if (!window.calendarRefresh) {
+        window.calendarRefresh = {};
+      }
+      
+      window.calendarRefresh.refreshCalendar = refreshCalendar;
+      
+      return () => {
+        // Cleanup when component unmounts
+        if (window.calendarRefresh) {
+          window.calendarRefresh.refreshCalendar = () => console.log("Calendar component unmounted");
+        }
+      };
+    }
+  }, []);
 
   return (
     <CalendarContainer>
       <ResponsiveCalendarFrame
+        key={key}
+        ref={iframeRef}
         src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FNew_York&showPrint=0&showNav=0&showTabs=0&title=Theo%20Demo%20Calendar&showTz=0&showCalendars=0&src=demo-calendar%40example.com"
         data-testid="calendar-iframe"
       />
     </CalendarContainer>
   );
-};
+});
+
+CalendarConsole.displayName = 'CalendarConsole';
 
 export default CalendarConsole; 
