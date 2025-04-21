@@ -1,9 +1,11 @@
+import fns from '../function_calling';
+
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
     // For development, you might use a local endpoint (uncomment below if needed)
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -88,12 +90,24 @@ export async function startConnection(callbacks = {}) {
             // Specify the content type as SDP.
             "Content-Type": "application/sdp" 
         },
+    }).catch(error => {
+        console.error("API connection error:", error.message);
+        if (callbacks.onConnectionFailed && typeof callbacks.onConnectionFailed === 'function') {
+            callbacks.onConnectionFailed(`API error: ${error.message}`);
+        }
+        throw error;
     });
 
     // Construct an SDP answer using the response from the API.
     const answer = { type: "answer", sdp: await sdpResponse.text() };
     // Set the remote description of the peer connection with the received SDP answer.
-    await pc.setRemoteDescription(answer);
+    await pc.setRemoteDescription(answer).catch(error => {
+        console.error("Error setting remote description:", error.message);
+        if (callbacks.onConnectionFailed && typeof callbacks.onConnectionFailed === 'function') {
+            callbacks.onConnectionFailed(`SDP error: ${error.message}`);
+        }
+        throw error;
+    });
 
     // Prepare the initial AI response message with the necessary instructions.
     // const responseCreate = {
@@ -125,14 +139,168 @@ export async function startConnection(callbacks = {}) {
                 create_response: true,
         },
         temperature: 0.7,
-        max_response_output_tokens: 4096,  // Changed from 10000 to stay within API limits
-        },
+        max_response_output_tokens: 4096,
+        tools: [
+            {
+              type: "function",
+              name: "fetchWeatherForecast",
+              description:
+                "Gets current weather conditions using the restaurant ZIP code. Use `condition.text` for the weather, `temp_f` for °F, and `daily_chance_of_rain` to warn of rain.",
+              parameters: {
+                type: "object",
+                properties: {
+                  zipCode: {
+                    type: "string",
+                    description: "The restaurant ZIP code",
+                  }
+                },
+                required: ["zipCode"],
+              }
+            },
+            {
+              type: "function",
+              name: "createReservationEvent",
+              description: 
+                "Creates a new restaurant reservation. Schedules the event in the user's Google Calendar and returns the created event details.",
+              parameters: {
+                type: "object",
+                properties: {
+                    name: {
+                      type: "string",
+                      description: "Name of the person making the reservation"
+                    },
+                  date: {
+                    type: "string",
+                    description: "Date of the reservation in YYYY-MM-DD format"
+                  },
+                  time: {
+                    type: "string",
+                    description: "Time of the reservation in HH:MM format (24-hour)"
+                  },
+                  partySize: {
+                    type: "integer",
+                    description: "Number of people in the reservation"
+                  },
+                  email: {
+                    type: "string",
+                    description: "Contact email for the reservation"
+                  },
+                  restaurantName: {
+                    type: "string",
+                    description: "Name of the restaurant for the reservation"
+                  },
+                  restaurantAddress: {
+                    type: "string",
+                    description: "Address of the restaurant"
+                  }
+                },
+                required: ["date", "name", "time", "partySize", "email", "restaurantName", "restaurantAddress"]
+              }
+            },
+            {
+              type: "function",
+              name: "updateReservationEvent",
+              description:
+                "Updates an existing restaurant reservation. Only specified fields will be updated.",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person who made the reservation (used to identify the reservation)"
+                  },
+                  date: {
+                    type: "string",
+                    description: "Date of the reservation in YYYY-MM-DD format"
+                  },
+                  time: {
+                    type: "string",
+                    description: "Time of the reservation in HH:MM format (24-hour)"
+                  },
+                  partySize: {
+                    type: "integer",
+                    description: "Number of people in the reservation"
+                  },
+                  email: {
+                    type: "string",
+                    description: "Contact email for the reservation"
+                  },
+                  restaurantName: {
+                    type: "string",
+                    description: "Name of the restaurant for the reservation"
+                  },
+                  restaurantAddress: {
+                    type: "string",
+                    description: "Address of the restaurant"
+                  },
+                  newName: {
+                    type: "string",
+                    description: "New name for the person making the reservation (if changing the name)"
+                  }
+                },
+                required: ["name"]
+              }
+            },
+            {
+              type: "function",
+              name: "deleteReservationEvent",
+              description:
+                "Deletes an existing restaurant reservation.",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person who made the reservation to delete"
+                  }
+                },
+                required: ["name"]
+              }
+            },
+          ],
+          tool_choice: "auto",
+      },
     };
     // Once the data channel is open, send the initial response to the AI.
     dc.addEventListener("open", () => {
         console.log('Data channel opened, sending initial message');
-        dc.send(JSON.stringify(responseCreate));
         dc.send(JSON.stringify(sessionUpdate));
+        dc.send(JSON.stringify(responseCreate));
+    });
+
+    // Add error handling for data channel
+    dc.addEventListener('error', (error) => {
+        console.error('Data channel error:', error);
+        if (callbacks.onConnectionFailed && typeof callbacks.onConnectionFailed === 'function') {
+            callbacks.onConnectionFailed(`Data channel error: ${error.message || 'Unknown error'}`);
+        }
+    });
+
+    dc.addEventListener('message', async (ev) => {
+        // console.log('Data channel message received:', ev.data);
+        const msg = JSON.parse(ev.data);
+        // Handle function calls
+        if (msg.type === 'response.function_call_arguments.done') {
+            const fn = fns[msg.name];
+            if (fn !== undefined) {
+                console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
+                const args = JSON.parse(msg.arguments);
+                const result = await fn(args);
+                console.log('result', result);
+                // Let OpenAI know that the function has been called and share it's output
+                const event = {
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: msg.call_id, // call_id from the function_call message
+                        output: JSON.stringify(result), // result of the function
+                    },
+                };
+                dc.send(JSON.stringify(event));
+                // Have assistant respond after getting the results
+                dc.send(JSON.stringify({type:"response.create"}));
+            }
+        }
     });
 
     

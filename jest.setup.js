@@ -1,6 +1,10 @@
 // Add any global test setup here
 require('@testing-library/jest-dom');
 
+// Mock CSS imports
+jest.mock('slick-carousel/slick/slick.css', () => ({}));
+jest.mock('slick-carousel/slick/slick-theme.css', () => ({}));
+
 // Mock the next/dynamic import which might be used in components
 jest.mock('next/dynamic', () => ({
   __esModule: true,
