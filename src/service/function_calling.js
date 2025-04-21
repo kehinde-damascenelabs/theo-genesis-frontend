@@ -1,7 +1,8 @@
 const fns = {
   fetchWeatherForecast: async ({ zipCode }) => {
     try {
-      const response = await fetch(`http://localhost:3000/weather/forecast?zipCode=${zipCode}`); //DEV
+      // const response = await fetch(`http://localhost:3000/weather/forecast?zipCode=${zipCode}`); //DEV
+      const response = await fetch(`https://openaibackend-production.up.railway.app/weather/forecast?zipCode=${zipCode}`);
       const json = await response.json();
       console.log('_____________json________________:', json);
       return json;
@@ -13,7 +14,8 @@ const fns = {
   // Create a new calendar event
   createReservationEvent: async ({ userId, date, time, partySize, email, restaurantName, restaurantAddress, name }) => {
     try {
-      const response = await fetch('http://localhost:3000/calendar/events', {
+      // const response = await fetch('http://localhost:3000/calendar/events', {
+      const response = await fetch('https://openaibackend-production.up.railway.app/calendar/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -60,7 +62,8 @@ const fns = {
         ...(newName && { name: newName }) // Use newName parameter but set as 'name' in the request
       };
 
-      const response = await fetch(`http://localhost:3000/calendar/events/${encodeURIComponent(name)}`, {
+      // const response = await fetch(`http://localhost:3000/calendar/events/${encodeURIComponent(name)}`, {
+      const response = await fetch(`https://openaibackend-production.up.railway.app/calendar/events/${encodeURIComponent(name)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -86,7 +89,8 @@ const fns = {
   // Delete a calendar event
   deleteReservationEvent: async ({ userId, name }) => {
     try {
-      const response = await fetch(`http://localhost:3000/calendar/events/${encodeURIComponent(name)}`, {
+      // const response = await fetch(`http://localhost:3000/calendar/events/${encodeURIComponent(name)}`, {
+      const response = await fetch(`https://openaibackend-production.up.railway.app/calendar/events/${encodeURIComponent(name)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
