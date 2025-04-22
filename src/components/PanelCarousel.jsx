@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Slider from 'react-slick';
@@ -74,6 +74,27 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, c
   };
 
   let sliderRef = null;
+
+  useEffect(() => {
+    // Expose tab switching function globally
+    if (typeof window !== 'undefined') {
+      window.panelCarouselControls = {
+        switchToTab: (index) => {
+          setActiveIndex(index);
+          if (sliderRef) {
+            sliderRef.slickGoTo(index);
+          }
+        }
+      };
+      
+      return () => {
+        // Clean up when component unmounts
+        if (window.panelCarouselControls) {
+          window.panelCarouselControls = undefined;
+        }
+      };
+    }
+  }, [sliderRef]);
 
   return (
     <CarouselContainer>

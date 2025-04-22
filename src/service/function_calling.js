@@ -112,6 +112,36 @@ const fns = {
       throw new Error(`Failed to delete calendar event: ${error.message}`);
     }
   },
+
+  switchTab: async ({ tabName }) => {
+    try {
+      // Create a mapping from names to indices
+      const tabIndices = {
+        "Transcript": 0,
+        "Restaurant Info": 1,
+        "Menu": 2,
+        "Calendar": 3
+      };
+      
+      // Get the index for the requested tab
+      const index = tabIndices[tabName];
+      
+      // Check if the index is valid
+      if (index === undefined) {
+        throw new Error(`Unknown tab name: ${tabName}`);
+      }
+      
+      // Access the global tab switching function if available
+      if (typeof window !== 'undefined' && window.panelCarouselControls) {
+        window.panelCarouselControls.switchToTab(index);
+        return { success: true, message: `Switched to ${tabName} tab` };
+      } else {
+        throw new Error("Tab switching controls not available");
+      }
+    } catch (error) {
+      throw new Error(`Failed to switch tab: ${error.message}`);
+    }
+  }
 };
                                                                                                     
 module.exports = fns;
