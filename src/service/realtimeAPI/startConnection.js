@@ -318,7 +318,6 @@ export async function startConnection(callbacks = {}) {
         }
     });
 
-    
     // Return the peer connection, data channel, and audio element so they can be used elsewhere.
     return { pc, dc, audioEl };
 }
