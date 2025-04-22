@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import "../utils/logger"; // Import logger utility to conditionally disable console.log in production
 
 export const metadata = {
   title: 'Genesis Labs Voice AI Demo',
