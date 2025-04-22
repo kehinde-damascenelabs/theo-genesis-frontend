@@ -3,9 +3,8 @@ import fns from '../function_calling';
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
-    // For development, you might use a local endpoint (uncomment below if needed)
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -257,6 +256,22 @@ export async function startConnection(callbacks = {}) {
                 required: ["name"]
               }
             },
+            {
+              type: "function",
+              name: "switchTab",
+              description: "Switches the display to a different information tab",
+              parameters: {
+                type: "object",
+                properties: {
+                  tabName: {
+                    type: "string",
+                    enum: ["Transcript", "Restaurant Info", "Menu", "Calendar"],
+                    description: "The name of the tab to switch to"
+                  }
+                },
+                required: ["tabName"]
+              }
+            }
           ],
           tool_choice: "auto",
       },
