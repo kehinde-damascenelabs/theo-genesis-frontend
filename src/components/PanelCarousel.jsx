@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Slider from 'react-slick';
@@ -47,6 +47,7 @@ const StyledSlider = styled(Slider)({
 const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, calendarPanel }) => {
   const theme = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
+  const sliderRef = useRef(null);
 
   const handleChangeIndex = (index) => {
     setActiveIndex(index);
@@ -54,8 +55,8 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, c
 
   const handleTabClick = (index) => {
     setActiveIndex(index);
-    if (sliderRef) {
-      sliderRef.slickGoTo(index);
+    if (sliderRef.current) {
+      sliderRef.current.slickGoTo(index);
     }
   };
 
@@ -73,16 +74,15 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, c
     arrows: false,
   };
 
-  let sliderRef = null;
-
   useEffect(() => {
     // Expose tab switching function globally
     if (typeof window !== 'undefined') {
       window.panelCarouselControls = {
         switchToTab: (index) => {
+          console.log('Switching to tab:', index, 'sliderRef exists:', !!sliderRef.current);
           setActiveIndex(index);
-          if (sliderRef) {
-            sliderRef.slickGoTo(index);
+          if (sliderRef.current) {
+            sliderRef.current.slickGoTo(index);
           }
         }
       };
@@ -94,7 +94,7 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, c
         }
       };
     }
-  }, [sliderRef]);
+  }, []);
 
   return (
     <CarouselContainer>
@@ -130,7 +130,7 @@ const PanelCarousel = ({ transcriptPanel, placeDetailsPanel, menuConsolePanel, c
       </NavigationContainer>
       
       <StyledSlider
-        ref={slider => (sliderRef = slider)}
+        ref={slider => (sliderRef.current = slider)}
         {...settings}
       >
         {/* Transcript Panel */}
