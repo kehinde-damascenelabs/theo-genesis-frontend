@@ -79,6 +79,15 @@ export default function Hero() {
               {HERO_TEXT.actionText}
             </Typography>
           </Typography>
+          <Typography
+            sx={{
+              textAlign: 'center',
+              color: 'error.main', // Red color
+              width: { sm: '100%', md: '80%' },
+            }}
+          >
+            {HERO_TEXT.disclaimer}
+          </Typography>
         </Stack>
       </Container>
     </Box>

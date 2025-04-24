@@ -3,4 +3,5 @@ export const HERO_TEXT = {
   subtitle: "Demo",
   description: `Meet Theo!, a low-latency conversational AI designed to help restaurants streamline tasks. In this demo, Theo will guide you through exploring a top-tier dining experience, discovering the menu, and making reservations—all by voice! `,
   actionText: "Click the microphone & start a conversation!",
+  disclaimer: "Note: This is a prototype. If anything goes wrong, click the microphone to restart. I'd love your feedback—share any ideas below!"
 };
