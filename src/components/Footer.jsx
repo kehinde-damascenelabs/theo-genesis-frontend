@@ -180,7 +180,7 @@ export default function Footer() {
             Terms of Service
           </Link> */}
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-            &nbsp;Powered By ChatGPT 4o-mini&nbsp;
+            &nbsp;Powered By ChatGPT&nbsp;
           </Typography>
           <Copyright />
         </div>
