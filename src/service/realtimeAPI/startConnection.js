@@ -1,4 +1,5 @@
 import fns from '../function_calling';
+import { agentPrompt } from '../../utils/helper_func';
 
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
@@ -34,6 +35,9 @@ export async function startConnection(callbacks = {}) {
         const event = JSON.parse(e.data);
         // Log the received AI event.
         console.log("AI Event:", event);
+        if (event.type === "error") {
+            console.log("Error event received :", event.error.message);
+        }
         
         // Check if the event contains a failed status
         if (event.type === "response.done" && event.response?.status === "failed") {
@@ -124,161 +128,175 @@ export async function startConnection(callbacks = {}) {
     };
 
     const sessionUpdate = {
-        type: "session.update",
-        session: {
-            modalities: ["text", "audio"],
-            // Enable transcription using Whisper
-            input_audio_transcription: { model: "whisper-1" },
-            // Configure voice activity detection
-            turn_detection: {
-                type: "server_vad",
-                threshold: 0.5,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 1000,
-                create_response: true,
+      type: "session.update",
+      session: {
+        modalities: ["text", "audio"],
+        // Enable transcription using Whisper
+        input_audio_transcription: { model: "whisper-1" },
+        // Configure voice activity detection
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.75,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 1000,
+          create_response: true,
         },
-        temperature: 0.7,
+        temperature: 0.6,
+        instructions: agentPrompt,
         max_response_output_tokens: 4096,
         tools: [
-            {
-              type: "function",
-              name: "fetchWeatherForecast",
-              description:
-                "Gets current weather conditions using the restaurant ZIP code. Use `condition.text` for the weather, `temp_f` for °F, and `daily_chance_of_rain` to warn of rain.",
-              parameters: {
-                type: "object",
-                properties: {
-                  zipCode: {
-                    type: "string",
-                    description: "The restaurant ZIP code",
-                  }
+          {
+            type: "function",
+            name: "fetchWeatherForecast",
+            description:
+              "Gets current weather conditions using the restaurant ZIP code. Use `condition.text` for the weather, `temp_f` for °F, and `daily_chance_of_rain` to warn of rain.",
+            parameters: {
+              type: "object",
+              properties: {
+                zipCode: {
+                  type: "string",
+                  description: "The restaurant ZIP code",
                 },
-                required: ["zipCode"],
-              }
+              },
+              required: ["zipCode"],
             },
-            {
-              type: "function",
-              name: "createReservationEvent",
-              description: 
-                "Creates a new restaurant reservation. Schedules the event in the user's Google Calendar and returns the created event details.",
-              parameters: {
-                type: "object",
-                properties: {
-                    name: {
-                      type: "string",
-                      description: "Name of the person making the reservation"
-                    },
-                  date: {
-                    type: "string",
-                    description: "Date of the reservation in YYYY-MM-DD format"
-                  },
-                  time: {
-                    type: "string",
-                    description: "Time of the reservation in HH:MM format (24-hour)"
-                  },
-                  partySize: {
-                    type: "integer",
-                    description: "Number of people in the reservation"
-                  },
-                  email: {
-                    type: "string",
-                    description: "Contact email for the reservation"
-                  },
-                  restaurantName: {
-                    type: "string",
-                    description: "Name of the restaurant for the reservation"
-                  },
-                  restaurantAddress: {
-                    type: "string",
-                    description: "Address of the restaurant"
-                  }
+          },
+          {
+            type: "function",
+            name: "createReservationEvent",
+            description:
+              "Creates a new restaurant reservation. Schedules the event in the user's Google Calendar and returns the created event details.",
+            parameters: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description: "Name of the person making the reservation",
                 },
-                required: ["date", "name", "time", "partySize", "email", "restaurantName", "restaurantAddress"]
-              }
+                date: {
+                  type: "string",
+                  description: "Date of the reservation in YYYY-MM-DD format",
+                },
+                time: {
+                  type: "string",
+                  description:
+                    "Time of the reservation in HH:MM format (24-hour)",
+                },
+                partySize: {
+                  type: "integer",
+                  description: "Number of people in the reservation",
+                },
+                email: {
+                  type: "string",
+                  description: "Contact email for the reservation",
+                },
+                restaurantName: {
+                  type: "string",
+                  description: "Name of the restaurant for the reservation",
+                },
+                restaurantAddress: {
+                  type: "string",
+                  description: "Address of the restaurant",
+                },
+              },
+              required: [
+                "date",
+                "name",
+                "time",
+                "partySize",
+                "email",
+                "restaurantName",
+                "restaurantAddress",
+              ],
             },
-            {
-              type: "function",
-              name: "updateReservationEvent",
-              description:
-                "Updates an existing restaurant reservation. Only specified fields will be updated.",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "The name of the person who made the reservation (used to identify the reservation)"
-                  },
-                  date: {
-                    type: "string",
-                    description: "Date of the reservation in YYYY-MM-DD format"
-                  },
-                  time: {
-                    type: "string",
-                    description: "Time of the reservation in HH:MM format (24-hour)"
-                  },
-                  partySize: {
-                    type: "integer",
-                    description: "Number of people in the reservation"
-                  },
-                  email: {
-                    type: "string",
-                    description: "Contact email for the reservation"
-                  },
-                  restaurantName: {
-                    type: "string",
-                    description: "Name of the restaurant for the reservation"
-                  },
-                  restaurantAddress: {
-                    type: "string",
-                    description: "Address of the restaurant"
-                  },
-                  newName: {
-                    type: "string",
-                    description: "New name for the person making the reservation (if changing the name)"
-                  }
+          },
+          {
+            type: "function",
+            name: "updateReservationEvent",
+            description:
+              "Updates an existing restaurant reservation. Only specified fields will be updated.",
+            parameters: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description:
+                    "The name of the person who made the reservation (used to identify the reservation)",
                 },
-                required: ["name"]
-              }
+                date: {
+                  type: "string",
+                  description: "Date of the reservation in YYYY-MM-DD format",
+                },
+                time: {
+                  type: "string",
+                  description:
+                    "Time of the reservation in HH:MM format (24-hour)",
+                },
+                partySize: {
+                  type: "integer",
+                  description: "Number of people in the reservation",
+                },
+                email: {
+                  type: "string",
+                  description: "Contact email for the reservation",
+                },
+                restaurantName: {
+                  type: "string",
+                  description: "Name of the restaurant for the reservation",
+                },
+                restaurantAddress: {
+                  type: "string",
+                  description: "Address of the restaurant",
+                },
+                newName: {
+                  type: "string",
+                  description:
+                    "New name for the person making the reservation (if changing the name)",
+                },
+              },
+              required: ["name"],
             },
-            {
-              type: "function",
-              name: "deleteReservationEvent",
-              description:
-                "Deletes an existing restaurant reservation.",
-              parameters: {
-                type: "object",
-                properties: {
-                  name: {
-                    type: "string",
-                    description: "The name of the person who made the reservation to delete"
-                  }
+          },
+          {
+            type: "function",
+            name: "deleteReservationEvent",
+            description: "Deletes an existing restaurant reservation.",
+            parameters: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description:
+                    "The name of the person who made the reservation to delete",
                 },
-                required: ["name"]
-              }
+              },
+              required: ["name"],
             },
-            {
-              type: "function",
-              name: "switchTab",
-              description: "Switches the display to a different information tab",
-              parameters: {
-                type: "object",
-                properties: {
-                  tabName: {
-                    type: "string",
-                    enum: ["Transcript", "Restaurant Info", "Menu", "Calendar"],
-                    description: "The name of the tab to switch to"
-                  }
+          },
+          {
+            type: "function",
+            name: "switchTab",
+            description: "Switches the display to a different information tab",
+            parameters: {
+              type: "object",
+              properties: {
+                tabName: {
+                  type: "string",
+                  enum: ["Transcript", "Restaurant Info", "Menu", "Calendar"],
+                  description: "The name of the tab to switch to",
                 },
-                required: ["tabName"]
-              }
-            }
-          ],
-          tool_choice: "auto",
+              },
+              required: ["tabName"],
+            },
+          },
+        ],
+        tool_choice: "auto",
       },
     };
+
     // Once the data channel is open, send the initial response to the AI.
     dc.addEventListener("open", () => {
-        console.log('Data channel opened, sending initial message');
+      console.log('Data channel opened, sending initial message');
         dc.send(JSON.stringify(sessionUpdate));
         dc.send(JSON.stringify(responseCreate));
     });
