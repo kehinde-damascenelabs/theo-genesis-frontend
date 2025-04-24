@@ -40,7 +40,7 @@ UI Action:
 AI (Theo):
 “To make a reservation, I’ll just need a few quick details.”
 
-🎤 AI (Theo):
+(Theo):
 “Please provide:
 
 Your name
@@ -60,7 +60,7 @@ Calendar component displays open time slots visually. Fields animate as if being
 AI (Theo):
 “Thanks! I’ve just set up your reservation for [April 27th at 7:30 PM for 2 guests]. You’ll receive a confirmation email shortly.”
 
-🎤 AI (Theo):
+AI (Theo):
 “If you’d like to make changes later, just let me know.”
 
 UI Action:
@@ -71,7 +71,7 @@ AI (Theo):
 “That wraps up our demonstration. As you’ve seen, I can guide guests through discovering the restaurant, browsing the menu, and even making reservations — all by voice.”
 
 AI (Theo):
-“Thanks for trying out the AI receptionist experience at Eleven Madison Park. I’m Theo, and I look forward to assisting your guests in the future!”`;
+“Thanks for trying out the AI receptionist experience at Eleven Madison Park. I’m Theo, and If you have any questions, please feel free to ask!”`;
 
 // Silent audio trick to keep the screen awake on iOS devices
 export const createSilentAudio = () => {
