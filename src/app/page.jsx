@@ -54,7 +54,8 @@ export default function Page(props) {
             '@media (max-width: 900px)': {
               display: 'flex',
               justifyContent: 'center',
-              order: 2
+              order: 1,
+              marginBottom: '2rem'
             }
           }}>
             <AudioWaveform 
@@ -72,7 +73,7 @@ export default function Page(props) {
           </Grid>
           <Grid item xs={12} md={6} sx={{ 
             '@media (max-width: 900px)': {
-              order: 1
+              order: 2
             }
           }}>
             <PanelCarousel
