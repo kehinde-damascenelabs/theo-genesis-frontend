@@ -148,7 +148,8 @@ export const saveSessionTranscript = async (additionalMetadata = {}) => {
     console.log('Sending consolidated transcript payload to backend:', payload);
     
     // Send to backend API - use local development endpoint
-    const response = await fetch('http://localhost:3000/api/save-transcript', {
+    // const response = await fetch('http://localhost:3000/api/save-transcript', { //DEV
+    const response = await fetch('https://openaibackend-production.up.railway.app/api/save-transcript', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
