@@ -12,17 +12,7 @@ import {
   clearSession
 } from '../utils/transcriptService';
 
-// Helper to detect if we're on a mobile browser
-const isMobileBrowser = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
-
-export const useMicrophone = ({ 
-  onUserTranscript, 
-  onAITranscript, 
-  messages = [], 
-  onConnectionError
-} = {}) => {
+export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] } = {}) => {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -35,7 +25,6 @@ export const useMicrophone = ({
   const silentAudioRef = useRef(null);
   const sessionStartTimeRef = useRef(null);
   const mediaRecorderRef = useRef(null);
-  const connectionTimeoutRef = useRef(null);
 
   // Audio processing refs
   const mergedAnalyserRef = useRef(null);
@@ -119,193 +108,139 @@ export const useMicrophone = ({
       // Connect gain node to audio output
       gainNodeRef.current.connect(audioContextRef.current.destination);
       
-      // Set a connection timeout for mobile devices
-      if (isMobileBrowser()) {
-        connectionTimeoutRef.current = setTimeout(() => {
-          if (isConnecting && !isMicOn) {
-            console.log("Connection timeout on mobile device, resetting state");
-            if (onConnectionError && typeof onConnectionError === 'function') {
-              onConnectionError("Connection timeout. Please try again.");
-            }
-            stopMicrophone();
-          }
-        }, 10000); // 10 second timeout for mobile connections
+      // Start WebRTC connection with callbacks for transcript events
+      connectionRef.current = await startConnection({
+        onUserTranscript: handleUserTranscript,
+        onAITranscript: handleAITranscript,
+        onAISpeakingStateChange: handleAISpeakingStateChange,
+        onFunctionCall: handleFunctionCall
+      });
+      
+      console.log("AI Connection started", connectionRef.current);
+
+      // Mute the default audio element to prevent double playback
+      if (connectionRef.current.audioEl) {
+        connectionRef.current.audioEl.muted = true;
       }
 
-      // Mobile-specific constraints
-      const audioConstraints = {
-        audio: true,
-        // Add specific constraints for mobile devices
-        ...(isMobileBrowser() && {
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
+      // Set up microphone stream
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      microphoneStreamRef.current = stream;
+
+      // Set up MediaRecorder for user audio capture - with MIME type fallbacks
+      let options = {};
+      const mimeTypes = [
+        'audio/webm', 
+        'audio/mp4',
+        'audio/ogg',
+        'audio/wav'
+      ];
+      
+      // Find the first supported MIME type
+      for (let type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          options.mimeType = type;
+          console.log(`Using supported MIME type: ${type}`);
+          break;
+        }
+      }
+      
+      try {
+        mediaRecorderRef.current = new MediaRecorder(stream, options);
+      } catch (err) {
+        console.warn(`Failed to create MediaRecorder with options: ${JSON.stringify(options)}. Trying without MIME type.`);
+        // Try without specifying the MIME type
+        mediaRecorderRef.current = new MediaRecorder(stream);
+      }
+      
+      // Handle audio data chunks
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          handleUserAudioData(event.data);
+        }
+      };
+      
+      // Start recording in small chunks to get frequent data
+      mediaRecorderRef.current.start(1000); // Collect chunks every 1 second
+
+      // Create microphone source and connect ONLY to the analyzer
+      const micSource = audioContextRef.current.createMediaStreamSource(stream);
+      micSource.connect(mergedAnalyserRef.current);
+
+      // Set up remote audio handling
+      if (connectionRef.current.audioEl) {
+        const setupRemoteAudio = (stream) => {
+          if (stream) {
+            // Clean up previous remote source if it exists
+            if (remoteSourceRef.current) {
+              remoteSourceRef.current.disconnect();
+            }
+
+            // Create new remote source
+            remoteSourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+            // Connect remote audio to both analyzer and gain node
+            remoteSourceRef.current.connect(mergedAnalyserRef.current);
+            remoteSourceRef.current.connect(gainNodeRef.current);
           }
-        })
+        };
+
+        // Handle initial remote stream if it exists
+        if (connectionRef.current.audioEl.srcObject) {
+          setupRemoteAudio(connectionRef.current.audioEl.srcObject);
+        }
+
+        // Handle new remote streams
+        connectionRef.current.pc.ontrack = (e) => {
+          connectionRef.current.audioEl.srcObject = e.streams[0];
+          setupRemoteAudio(e.streams[0]);
+        };
+      }
+
+      // Set up wake lock
+      wakeLockRef.current = await requestWakeLock();
+      if (!wakeLockRef.current) {
+        console.warn('Using silent audio fallback to prevent screen dimming.');
+        silentAudioRef.current = createSilentAudio();
+        silentAudioRef.current.play().catch(console.error);
+      }
+
+      // Set up visualization
+      const bufferLength = mergedAnalyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const animateBars = () => {
+        mergedAnalyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Calculate average amplitude
+        const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+        
+        // Update visualization if there's significant audio activity
+        if (average > 5) {
+          barsRef.current.forEach((bar, index) => {
+            if (bar) {
+              const value = dataArray[index % bufferLength];
+              const height = Math.max((value / 255) * 100, 4);
+              bar.style.height = `${height}px`;
+            }
+          });
+        }
+        
+        animationIdRef.current = requestAnimationFrame(animateBars);
       };
 
-      try {
-        // Start WebRTC connection with callbacks for transcript events
-        connectionRef.current = await startConnection({
-          onUserTranscript: handleUserTranscript,
-          onAITranscript: handleAITranscript,
-          onAISpeakingStateChange: handleAISpeakingStateChange,
-          onFunctionCall: handleFunctionCall,
-          // Add connection error callback
-          onConnectionFailed: (error) => {
-            console.error("Connection failed:", error);
-            if (onConnectionError && typeof onConnectionError === 'function') {
-              onConnectionError(error);
-            }
-            stopMicrophone();
-          },
-          // Add connection state change callback
-          onConnectionStateChange: (state) => {
-            console.log("Connection state in hook:", state);
-            if (state === 'failed' || state === 'disconnected' || state === 'closed') {
-              if (onConnectionError && typeof onConnectionError === 'function') {
-                onConnectionError(`Connection state: ${state}`);
-              }
-              stopMicrophone();
-            }
-          }
-        });
-        
-        console.log("AI Connection started", connectionRef.current);
-
-        // Clear connection timeout if set
-        if (connectionTimeoutRef.current) {
-          clearTimeout(connectionTimeoutRef.current);
-          connectionTimeoutRef.current = null;
+      animateBars();
+      
+      // Add session metadata
+      updateSessionMetadata({
+        deviceInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform
         }
-
-        // Mute the default audio element to prevent double playback
-        if (connectionRef.current.audioEl) {
-          connectionRef.current.audioEl.muted = true;
-        }
-
-        // Set up microphone stream
-        const stream = await navigator.mediaDevices.getUserMedia(audioConstraints);
-        microphoneStreamRef.current = stream;
-
-        // Set up MediaRecorder for user audio capture
-        const options = { mimeType: 'audio/webm' };
-        mediaRecorderRef.current = new MediaRecorder(stream, options);
-        
-        // Handle audio data chunks
-        mediaRecorderRef.current.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            handleUserAudioData(event.data);
-          }
-        };
-        
-        // Start recording in small chunks to get frequent data
-        mediaRecorderRef.current.start(1000);
-
-        // Create microphone source and connect ONLY to the analyzer
-        const micSource = audioContextRef.current.createMediaStreamSource(stream);
-        micSource.connect(mergedAnalyserRef.current);
-
-        // Monitor connection state for failures
-        if (connectionRef.current && connectionRef.current.pc) {
-          connectionRef.current.pc.onconnectionstatechange = () => {
-            console.log("Connection state changed:", connectionRef.current.pc.connectionState);
-            if (connectionRef.current.pc.connectionState === 'failed' || 
-                connectionRef.current.pc.connectionState === 'disconnected' ||
-                connectionRef.current.pc.connectionState === 'closed') {
-              console.log("Connection failed or disconnected, resetting");
-              stopMicrophone();
-            }
-          };
-        }
-
-        // Set up remote audio handling
-        if (connectionRef.current.audioEl) {
-          const setupRemoteAudio = (stream) => {
-            if (stream) {
-              // Clean up previous remote source if it exists
-              if (remoteSourceRef.current) {
-                remoteSourceRef.current.disconnect();
-              }
-
-              // Create new remote source
-              remoteSourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-              // Connect remote audio to both analyzer and gain node
-              remoteSourceRef.current.connect(mergedAnalyserRef.current);
-              remoteSourceRef.current.connect(gainNodeRef.current);
-            }
-          };
-
-          // Handle initial remote stream if it exists
-          if (connectionRef.current.audioEl.srcObject) {
-            setupRemoteAudio(connectionRef.current.audioEl.srcObject);
-          }
-
-          // Handle new remote streams
-          connectionRef.current.pc.ontrack = (e) => {
-            connectionRef.current.audioEl.srcObject = e.streams[0];
-            setupRemoteAudio(e.streams[0]);
-          };
-        }
-
-        // Set up wake lock
-        wakeLockRef.current = await requestWakeLock();
-        if (!wakeLockRef.current) {
-          console.warn('Using silent audio fallback to prevent screen dimming.');
-          silentAudioRef.current = createSilentAudio();
-          silentAudioRef.current.play().catch(console.error);
-        }
-
-        // Set up visualization
-        const bufferLength = mergedAnalyserRef.current.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        const animateBars = () => {
-          mergedAnalyserRef.current.getByteFrequencyData(dataArray);
-          
-          // Calculate average amplitude
-          const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-          
-          // Update visualization if there's significant audio activity
-          if (average > 5) {
-            barsRef.current.forEach((bar, index) => {
-              if (bar) {
-                const value = dataArray[index % bufferLength];
-                const height = Math.max((value / 255) * 100, 4);
-                bar.style.height = `${height}px`;
-              }
-            });
-          }
-          
-          animationIdRef.current = requestAnimationFrame(animateBars);
-        };
-
-        animateBars();
-        
-        // Add session metadata
-        updateSessionMetadata({
-          deviceInfo: {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            isMobile: isMobileBrowser()
-          }
-        });
-        
-        setIsMicOn(true);
-      } catch (connectionError) {
-        console.error("Connection error:", connectionError);
-        if (onConnectionError && typeof onConnectionError === 'function') {
-          onConnectionError(connectionError.message || "Failed to establish connection");
-        }
-        stopMicrophone();
-        throw connectionError;
-      }
+      });
+      
+      setIsMicOn(true);
     } catch (err) {
       console.error("Error starting microphone and AI:", err);
-      if (onConnectionError && typeof onConnectionError === 'function') {
-        onConnectionError(err.message || "Failed to start microphone");
-      }
       stopMicrophone();
     } finally {
       setIsConnecting(false);
@@ -313,12 +248,6 @@ export const useMicrophone = ({
   };
 
   const stopMicrophone = async () => {
-    // Clear connection timeout if it exists
-    if (connectionTimeoutRef.current) {
-      clearTimeout(connectionTimeoutRef.current);
-      connectionTimeoutRef.current = null;
-    }
-
     // Stop MediaRecorder if it's active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
