@@ -5,7 +5,8 @@ import { createSilentAudio, requestWakeLock } from '../utils/helper_func';
 import { 
   initializeSession, 
   addMessageToSession, 
-  addFunctionCallToSession, 
+  addFunctionCallToSession,
+  addUserAudioToSession,
   updateSessionMetadata, 
   saveSessionTranscript,
   clearSession
@@ -23,6 +24,7 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] 
   const wakeLockRef = useRef(null);
   const silentAudioRef = useRef(null);
   const sessionStartTimeRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
 
   // Audio processing refs
   const mergedAnalyserRef = useRef(null);
@@ -70,6 +72,21 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] 
     }
   }, []);
 
+  // Function to handle user audio chunks for transcript saving
+  const handleUserAudioData = useCallback((audioBlob) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+      const base64Audio = reader.result.split(',')[1]; // Extract base64 data
+      
+      // Add to session data
+      addUserAudioToSession({
+        timestamp: new Date().toISOString(),
+        audioData: base64Audio
+      });
+    };
+  }, []);
+
   const startMicrophone = async () => {
     try {
       setIsConnecting(true);
@@ -109,6 +126,20 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] 
       // Set up microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       microphoneStreamRef.current = stream;
+
+      // Set up MediaRecorder for user audio capture
+      const options = { mimeType: 'audio/webm' };
+      mediaRecorderRef.current = new MediaRecorder(stream, options);
+      
+      // Handle audio data chunks
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          handleUserAudioData(event.data);
+        }
+      };
+      
+      // Start recording in small chunks to get frequent data
+      mediaRecorderRef.current.start(1000); // Collect chunks every 1 second
 
       // Create microphone source and connect ONLY to the analyzer
       const micSource = audioContextRef.current.createMediaStreamSource(stream);
@@ -195,6 +226,11 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] 
   };
 
   const stopMicrophone = async () => {
+    // Stop MediaRecorder if it's active
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
     // Save transcript if we have a session and the microphone was on
     if (isMicOn && sessionStartTimeRef.current) {
       try {

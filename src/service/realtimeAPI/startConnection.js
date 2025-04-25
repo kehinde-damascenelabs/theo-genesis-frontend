@@ -1,6 +1,6 @@
 import fns from '../function_calling';
 import { agentPrompt } from '../../utils/helper_func';
-import { addFunctionCallToSession } from '../../utils/transcriptService';
+import { addFunctionCallToSession, addAIAudioToSession } from '../../utils/transcriptService';
 
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
@@ -8,8 +8,8 @@ export async function startConnection(callbacks = {}) {
     const functionCalls = [];
     
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
-    const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -77,6 +77,27 @@ export async function startConnection(callbacks = {}) {
         } else if (event.type === "response.audio.generation.done") {
             if (callbacks.onAISpeakingStateChange && typeof callbacks.onAISpeakingStateChange === 'function') {
                 callbacks.onAISpeakingStateChange(false);
+            }
+        }
+        
+        // Capture AI audio chunks
+        if (event.type === "response.audio.delta" && event.audio) {
+            try {
+                // Convert binary audio data to base64
+                const audioData = btoa(String.fromCharCode(...new Uint8Array(event.audio)));
+                
+                // Save to transcript service
+                addAIAudioToSession({
+                    timestamp: new Date().toISOString(),
+                    audioData: audioData
+                });
+                
+                // Callback for audio chunk if needed
+                if (callbacks.onAIAudioChunk && typeof callbacks.onAIAudioChunk === 'function') {
+                    callbacks.onAIAudioChunk(audioData);
+                }
+            } catch (error) {
+                console.error("Error processing AI audio chunk:", error);
             }
         }
     });

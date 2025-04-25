@@ -17,6 +17,8 @@ export const initializeSession = () => {
     startTime: new Date(),
     messages: [],
     functionCalls: [],
+    userAudioClips: [],
+    aiAudioClips: [],
     metadata: {
       sessionStartTime: new Date().toISOString(),
     }
@@ -41,6 +43,42 @@ export const addMessageToSession = (message) => {
   };
   
   currentSessionData.messages.push(formattedMessage);
+};
+
+/**
+ * Add user audio clip to the current session
+ * @param {Object} audioClip - User audio clip data
+ */
+export const addUserAudioToSession = (audioClip) => {
+  if (!currentSessionData) {
+    console.warn('No active session, initializing one now');
+    initializeSession();
+  }
+  
+  const formattedAudioClip = {
+    timestamp: audioClip.timestamp || new Date().toISOString(),
+    audioData: audioClip.audioData
+  };
+  
+  currentSessionData.userAudioClips.push(formattedAudioClip);
+};
+
+/**
+ * Add AI audio clip to the current session
+ * @param {Object} audioClip - AI audio clip data
+ */
+export const addAIAudioToSession = (audioClip) => {
+  if (!currentSessionData) {
+    console.warn('No active session, initializing one now');
+    initializeSession();
+  }
+  
+  const formattedAudioClip = {
+    timestamp: audioClip.timestamp || new Date().toISOString(),
+    audioData: audioClip.audioData
+  };
+  
+  currentSessionData.aiAudioClips.push(formattedAudioClip);
 };
 
 /**
@@ -95,6 +133,8 @@ export const saveSessionTranscript = async (additionalMetadata = {}) => {
     const payload = {
       transcript: currentSessionData.messages,
       functionCalls: currentSessionData.functionCalls,
+      userAudioClips: currentSessionData.userAudioClips,
+      aiAudioClips: currentSessionData.aiAudioClips,
       sessionData: {
         sessionId: currentSessionData.sessionId,
         timestamp: endTime.toISOString(),
