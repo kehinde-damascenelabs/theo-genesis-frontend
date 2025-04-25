@@ -6,7 +6,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
-import { useEffect, useCallback } from "react";
+import ErrorIcon from "@mui/icons-material/Error";
+import { useEffect, useCallback, useState } from "react";
 import { clearSession } from "../utils/transcriptService";
 
 const AudioWaveform = ({ 
@@ -21,6 +22,8 @@ const AudioWaveform = ({
   clearConversation,
   messages = []
 }) => {
+  const [connectionError, setConnectionError] = useState(null);
+
   const onUserTranscript = useCallback((transcript) => {
     if (handleUserTranscript && typeof handleUserTranscript === 'function') {
       // Use the conversation hook's handler if provided
@@ -42,6 +45,11 @@ const AudioWaveform = ({
     }
   }, [handleAITranscript, addAIResponse]);
 
+  const onConnectionError = useCallback((error) => {
+    console.error("Connection error in component:", error);
+    setConnectionError(error);
+  }, []);
+
   const { 
     isMicOn, 
     isConnecting, 
@@ -52,8 +60,16 @@ const AudioWaveform = ({
   } = useMicrophone({
     onUserTranscript: onUserTranscript,
     onAITranscript: onAITranscript,
-    messages: messages
+    messages: messages,
+    onConnectionError: onConnectionError
   });
+
+  // Clear connection error when successfully connected
+  useEffect(() => {
+    if (isMicOn && connectionError) {
+      setConnectionError(null);
+    }
+  }, [isMicOn, connectionError]);
 
   // Update isListening state in parent component if the prop exists
   useEffect(() => {
@@ -69,9 +85,37 @@ const AudioWaveform = ({
     }
   }, [aiSpeakingState, setIsAISpeaking]);
 
+  // Reset error state if connecting
+  useEffect(() => {
+    if (isConnecting) {
+      setConnectionError(null);
+    }
+  }, [isConnecting]);
+
   // Helper function to render the appropriate button based on state
   const renderConnectionButton = () => {
-    if (isConnecting) {
+    if (connectionError) {
+      return (
+        <Button
+          onClick={() => {
+            setConnectionError(null);
+            startMicrophone();
+          }}
+          sx={{
+            bgcolor: '#FFA726', // Orange
+            color: 'white',
+            borderRadius: '4px',
+            fontSize: '16px',
+            padding: '10px 20px',
+            textTransform: 'none',
+            width: '130px',
+          }}
+          startIcon={<ErrorIcon />}
+        >
+          Retry
+        </Button>
+      );
+    } else if (isConnecting) {
       return (
         <Button
           disabled
@@ -152,11 +196,35 @@ const AudioWaveform = ({
         ))}
       </div>
 
+      {connectionError && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '6rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            '@media (max-width: 900px)': {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              transform: 'none',
+              marginTop: '0.5rem'
+            }
+          }}
+        >
+          <Typography variant="caption" color="error" align="center" sx={{ display: 'block', mb: 1 }}>
+            Connection failed. Please try again.
+          </Typography>
+        </Box>
+      )}
+
       <Tooltip
         title={
           <div className="text-center">
             <strong>
-              {isConnecting
+              {connectionError
+                ? "Connection failed. Click to retry"
+                : isConnecting
                 ? "Connecting..."
                 : isMicOn
                 ? "Turn off microphone"
