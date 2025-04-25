@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import MicOffIcon from "@mui/icons-material/MicOff";
 import MicIcon from "@mui/icons-material/Mic";
 import { useEffect, useCallback } from "react";
+import { clearSession } from "../utils/transcriptService";
 
 const AudioWaveform = ({ 
   updateCurrentMessage,
@@ -17,7 +18,8 @@ const AudioWaveform = ({
   setIsAISpeaking,
   handleUserTranscript,
   handleAITranscript,
-  clearConversation
+  clearConversation,
+  messages = []
 }) => {
   const onUserTranscript = useCallback((transcript) => {
     if (handleUserTranscript && typeof handleUserTranscript === 'function') {
@@ -49,7 +51,8 @@ const AudioWaveform = ({
     barsRef 
   } = useMicrophone({
     onUserTranscript: onUserTranscript,
-    onAITranscript: onAITranscript
+    onAITranscript: onAITranscript,
+    messages: messages
   });
 
   // Update isListening state in parent component if the prop exists
@@ -96,6 +99,7 @@ const AudioWaveform = ({
             if (clearConversation && typeof clearConversation === 'function') {
               clearConversation();
             }
+            clearSession(); // Ensure session is cleared
           }}
           sx={{
             bgcolor: '#F14C52', // Red

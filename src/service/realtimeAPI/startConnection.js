@@ -1,11 +1,15 @@
 import fns from '../function_calling';
 import { agentPrompt } from '../../utils/helper_func';
+import { addFunctionCallToSession } from '../../utils/transcriptService';
 
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
+    // Create an array to track function calls
+    const functionCalls = [];
+    
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;
@@ -318,8 +322,28 @@ export async function startConnection(callbacks = {}) {
             if (fn !== undefined) {
                 console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
                 const args = JSON.parse(msg.arguments);
+                
+                // Create a more detailed function call record
+                const functionCall = {
+                    timestamp: new Date().toISOString(),
+                    functionName: msg.name,
+                    arguments: args,
+                    callId: msg.call_id
+                };
+                
+                // Add to the function calls array
+                functionCalls.push(functionCall);
+                
+                // Add to session storage for transcript saving
+                addFunctionCallToSession(functionCall);
+                
+                // Notify via callback if provided
+                if (callbacks.onFunctionCall && typeof callbacks.onFunctionCall === 'function') {
+                    callbacks.onFunctionCall(functionCalls);
+                }
+                
                 const result = await fn(args);
-                console.log('result', result);
+                console.log('Function call result:', result);
                 // Let OpenAI know that the function has been called and share it's output
                 const event = {
                     type: 'conversation.item.create',
@@ -337,5 +361,5 @@ export async function startConnection(callbacks = {}) {
     });
 
     // Return the peer connection, data channel, and audio element so they can be used elsewhere.
-    return { pc, dc, audioEl };
+    return { pc, dc, audioEl, functionCalls };
 }
