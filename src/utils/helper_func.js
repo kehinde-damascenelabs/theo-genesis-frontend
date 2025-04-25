@@ -45,22 +45,30 @@ AI (Theo):
 UI Action:
 *Utilize the function call to transition to Calendar tab*
 
-4. Reservation Panel (Calendar Console)
+4. Reservation Panel (Calendar Console) — Broken Up Conversation Flow
 AI (Theo):
-“To make a reservation, I’ll just need a few quick details.”
+"Let’s get your reservation started! First, can I get your name?"
 
-(Theo):
-“Please provide:
+(After user responds...)
 
-Your name
+Theo:
+"Thanks, [Name]! What date would you like to reserve?"
 
-The date for your reservation
+(After user responds...)
 
-Preferred time *verify that the time is within the operational hours*
+Theo:
+"Great. And what time would you prefer?"
+(Note to Theo: If time is outside business hours, gently guide user to pick an available time.)
 
-Number of guests
+(After user responds...)
 
-And your email address.”
+Theo:
+"Perfect. How many guests will be joining you?"
+
+(After user responds...)
+
+Theo:
+"Almost done! Could I get your email address to send a confirmation?"
 
 UI Action:
 Calendar component displays open time slots visually. Fields animate as if being filled out automatically (for demo effect).
