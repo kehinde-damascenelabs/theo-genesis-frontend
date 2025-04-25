@@ -2,17 +2,29 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { startConnection } from "../service/realtimeAPI/startConnection";
 import { stopConnection } from "../service/realtimeAPI/stopConnection";
 import { createSilentAudio, requestWakeLock } from '../utils/helper_func';
+import { 
+  initializeSession, 
+  addMessageToSession, 
+  addFunctionCallToSession,
+  addUserAudioToSession,
+  updateSessionMetadata, 
+  saveSessionTranscript,
+  clearSession
+} from '../utils/transcriptService';
 
-export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
+export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] } = {}) => {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [functionCalls, setFunctionCalls] = useState([]);
   const connectionRef = useRef(null);
   const barsRef = useRef([]);
   const audioContextRef = useRef(null);
   const animationIdRef = useRef(null);
   const wakeLockRef = useRef(null);
   const silentAudioRef = useRef(null);
+  const sessionStartTimeRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
 
   // Audio processing refs
   const mergedAnalyserRef = useRef(null);
@@ -24,21 +36,66 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
     if (onUserTranscript && typeof onUserTranscript === 'function') {
       onUserTranscript(transcript);
     }
+    
+    // Add to session data
+    addMessageToSession({
+      sender: 'user',
+      text: transcript,
+      timestamp: new Date().toISOString()
+    });
   }, [onUserTranscript]);
 
   const handleAITranscript = useCallback((transcript) => {
     if (onAITranscript && typeof onAITranscript === 'function') {
       onAITranscript(transcript);
     }
+    
+    // Add to session data
+    addMessageToSession({
+      sender: 'ai',
+      text: transcript,
+      timestamp: new Date().toISOString()
+    });
   }, [onAITranscript]);
 
   const handleAISpeakingStateChange = useCallback((isSpeaking) => {
     setIsAISpeaking(isSpeaking);
   }, []);
 
+  const handleFunctionCall = useCallback((calls) => {
+    setFunctionCalls(calls);
+    
+    // Add the new function call to session data
+    if (calls.length > 0) {
+      const latestCall = calls[calls.length - 1];
+      addFunctionCallToSession(latestCall);
+    }
+  }, []);
+
+  // Function to handle user audio chunks for transcript saving
+  const handleUserAudioData = useCallback((audioBlob) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+      const base64Audio = reader.result.split(',')[1]; // Extract base64 data
+      
+      // Add to session data
+      addUserAudioToSession({
+        timestamp: new Date().toISOString(),
+        audioData: base64Audio
+      });
+    };
+  }, []);
+
   const startMicrophone = async () => {
     try {
       setIsConnecting(true);
+      
+      // Initialize a new session
+      initializeSession();
+      
+      // Record the session start time
+      sessionStartTimeRef.current = new Date();
 
       // Initialize audio context
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -55,7 +112,8 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
       connectionRef.current = await startConnection({
         onUserTranscript: handleUserTranscript,
         onAITranscript: handleAITranscript,
-        onAISpeakingStateChange: handleAISpeakingStateChange
+        onAISpeakingStateChange: handleAISpeakingStateChange,
+        onFunctionCall: handleFunctionCall
       });
       
       console.log("AI Connection started", connectionRef.current);
@@ -68,6 +126,20 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
       // Set up microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       microphoneStreamRef.current = stream;
+
+      // Set up MediaRecorder for user audio capture
+      const options = { mimeType: 'audio/webm' };
+      mediaRecorderRef.current = new MediaRecorder(stream, options);
+      
+      // Handle audio data chunks
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          handleUserAudioData(event.data);
+        }
+      };
+      
+      // Start recording in small chunks to get frequent data
+      mediaRecorderRef.current.start(1000); // Collect chunks every 1 second
 
       // Create microphone source and connect ONLY to the analyzer
       const micSource = audioContextRef.current.createMediaStreamSource(stream);
@@ -135,6 +207,15 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
       };
 
       animateBars();
+      
+      // Add session metadata
+      updateSessionMetadata({
+        deviceInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform
+        }
+      });
+      
       setIsMicOn(true);
     } catch (err) {
       console.error("Error starting microphone and AI:", err);
@@ -144,7 +225,44 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
     }
   };
 
-  const stopMicrophone = () => {
+  const stopMicrophone = async () => {
+    // Stop MediaRecorder if it's active
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    // Save transcript if we have a session and the microphone was on
+    if (isMicOn && sessionStartTimeRef.current) {
+      try {
+        // Calculate session duration
+        const sessionDuration = new Date() - sessionStartTimeRef.current;
+        
+        // Update session metadata before saving
+        updateSessionMetadata({
+          sessionDuration: sessionDuration,
+          sessionDurationFormatted: `${Math.floor(sessionDuration / 60000)}m ${Math.floor((sessionDuration % 60000) / 1000)}s`,
+          sessionEndTime: new Date().toISOString(),
+          functionCallCount: functionCalls.length,
+          endReason: 'user-stopped',
+          messageCount: messages.length
+        });
+        
+        console.log('Saving transcript at end of session with data:', {
+          messageCount: messages.length,
+          messageData: messages.map(m => ({ sender: m.sender, textPreview: m.text.substring(0, 30) })),
+          functionCallsCount: functionCalls.length,
+          sessionDuration: `${Math.floor(sessionDuration / 60000)}m ${Math.floor((sessionDuration % 60000) / 1000)}s`
+        });
+        
+        // Save transcript with all accumulated data
+        await saveSessionTranscript();
+      } catch (error) {
+        console.error('Failed to save transcript:', error);
+      }
+    } else {
+      clearSession();
+    }
+
     // Clean up WebRTC connection
     if (connectionRef.current) {
       stopConnection(connectionRef.current);
@@ -204,6 +322,7 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
 
     setIsMicOn(false);
     setIsAISpeaking(false);
+    sessionStartTimeRef.current = null;
   };
 
   useEffect(() => {
@@ -219,12 +338,25 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
     };
   }, [isMicOn]);
 
+  // Save transcript when component unmounts if the session is active
+  useEffect(() => {
+    return () => {
+      if (isMicOn) {
+        saveSessionTranscript({
+          sessionEndReason: 'component-unmounted',
+          sessionEndTime: new Date().toISOString()
+        }).catch(err => console.error('Failed to save transcript on unmount:', err));
+      }
+    };
+  }, [isMicOn]);
+
   return { 
     isMicOn, 
     isConnecting, 
     isAISpeaking,
     startMicrophone, 
     stopMicrophone, 
-    barsRef 
+    barsRef,
+    functionCalls
   };
 };

@@ -1,8 +1,12 @@
 import fns from '../function_calling';
 import { agentPrompt } from '../../utils/helper_func';
+import { addFunctionCallToSession, addAIAudioToSession } from '../../utils/transcriptService';
 
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
+    // Create an array to track function calls
+    const functionCalls = [];
+    
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
     const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
     // const response = await fetch("http://localhost:3000/getEKey"); //DEV
@@ -73,6 +77,27 @@ export async function startConnection(callbacks = {}) {
         } else if (event.type === "response.audio.generation.done") {
             if (callbacks.onAISpeakingStateChange && typeof callbacks.onAISpeakingStateChange === 'function') {
                 callbacks.onAISpeakingStateChange(false);
+            }
+        }
+        
+        // Capture AI audio chunks
+        if (event.type === "response.audio.delta" && event.audio) {
+            try {
+                // Convert binary audio data to base64
+                const audioData = btoa(String.fromCharCode(...new Uint8Array(event.audio)));
+                
+                // Save to transcript service
+                addAIAudioToSession({
+                    timestamp: new Date().toISOString(),
+                    audioData: audioData
+                });
+                
+                // Callback for audio chunk if needed
+                if (callbacks.onAIAudioChunk && typeof callbacks.onAIAudioChunk === 'function') {
+                    callbacks.onAIAudioChunk(audioData);
+                }
+            } catch (error) {
+                console.error("Error processing AI audio chunk:", error);
             }
         }
     });
@@ -318,8 +343,28 @@ export async function startConnection(callbacks = {}) {
             if (fn !== undefined) {
                 console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
                 const args = JSON.parse(msg.arguments);
+                
+                // Create a more detailed function call record
+                const functionCall = {
+                    timestamp: new Date().toISOString(),
+                    functionName: msg.name,
+                    arguments: args,
+                    callId: msg.call_id
+                };
+                
+                // Add to the function calls array
+                functionCalls.push(functionCall);
+                
+                // Add to session storage for transcript saving
+                addFunctionCallToSession(functionCall);
+                
+                // Notify via callback if provided
+                if (callbacks.onFunctionCall && typeof callbacks.onFunctionCall === 'function') {
+                    callbacks.onFunctionCall(functionCalls);
+                }
+                
                 const result = await fn(args);
-                console.log('result', result);
+                console.log('Function call result:', result);
                 // Let OpenAI know that the function has been called and share it's output
                 const event = {
                     type: 'conversation.item.create',
@@ -337,5 +382,5 @@ export async function startConnection(callbacks = {}) {
     });
 
     // Return the peer connection, data channel, and audio element so they can be used elsewhere.
-    return { pc, dc, audioEl };
+    return { pc, dc, audioEl, functionCalls };
 }
