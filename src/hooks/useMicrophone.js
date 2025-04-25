@@ -127,9 +127,31 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript, messages = [] 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       microphoneStreamRef.current = stream;
 
-      // Set up MediaRecorder for user audio capture
-      const options = { mimeType: 'audio/webm' };
-      mediaRecorderRef.current = new MediaRecorder(stream, options);
+      // Set up MediaRecorder for user audio capture - with MIME type fallbacks
+      let options = {};
+      const mimeTypes = [
+        'audio/webm', 
+        'audio/mp4',
+        'audio/ogg',
+        'audio/wav'
+      ];
+      
+      // Find the first supported MIME type
+      for (let type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          options.mimeType = type;
+          console.log(`Using supported MIME type: ${type}`);
+          break;
+        }
+      }
+      
+      try {
+        mediaRecorderRef.current = new MediaRecorder(stream, options);
+      } catch (err) {
+        console.warn(`Failed to create MediaRecorder with options: ${JSON.stringify(options)}. Trying without MIME type.`);
+        // Try without specifying the MIME type
+        mediaRecorderRef.current = new MediaRecorder(stream);
+      }
       
       // Handle audio data chunks
       mediaRecorderRef.current.ondataavailable = (event) => {
