@@ -201,7 +201,8 @@ describe('useMicrophone hook', () => {
   });
 
   test('stopMicrophone cleans up resources', async () => {
-    const { result } = renderHook(() => useMicrophone());
+    const onSessionEndMock = jest.fn();
+    const { result } = renderHook(() => useMicrophone({ onSessionEnd: onSessionEndMock }));
     
     // First start the microphone
     await act(async () => {
@@ -227,6 +228,9 @@ describe('useMicrophone hook', () => {
     
     // Verify wake lock was released
     expect(mockWakeLock.release).toHaveBeenCalled();
+    
+    // Verify onSessionEnd callback was called
+    expect(onSessionEndMock).toHaveBeenCalled();
     
     // Verify microphone state was updated
     expect(result.current.isMicOn).toBe(false);
@@ -338,5 +342,38 @@ describe('useMicrophone hook', () => {
     
     // Verify silent audio was paused
     expect(mockSilentAudio.pause).toHaveBeenCalled();
+  });
+
+  test('passes callbacks to startConnection', async () => {
+    const onUserTranscriptMock = jest.fn();
+    const onAITranscriptMock = jest.fn();
+    const onSessionEndMock = jest.fn();
+    
+    renderHook(() => useMicrophone({
+      onUserTranscript: onUserTranscriptMock,
+      onAITranscript: onAITranscriptMock,
+      onSessionEnd: onSessionEndMock
+    }));
+    
+    // Verify startConnection is not called yet
+    expect(startConnection).not.toHaveBeenCalled();
+    
+    // Render and start the microphone
+    const { result } = renderHook(() => useMicrophone({
+      onUserTranscript: onUserTranscriptMock,
+      onAITranscript: onAITranscriptMock,
+      onSessionEnd: onSessionEndMock
+    }));
+    
+    await act(async () => {
+      await result.current.startMicrophone();
+    });
+    
+    // Verify startConnection was called with the correct callbacks
+    expect(startConnection).toHaveBeenCalledWith(expect.objectContaining({
+      onUserTranscript: expect.any(Function),
+      onAITranscript: expect.any(Function),
+      onAISpeakingStateChange: expect.any(Function)
+    }));
   });
 }); 

@@ -14,10 +14,26 @@ const TestWrapper = ({ children }) => {
 };
 
 describe('ConversationTranscript', () => {
+  // Update sample messages to include senderName and timestamp
   const sampleMessages = [
-    { sender: 'user', text: 'Hello!' },
-    { sender: 'ai', text: 'Hi there! How can I assist you today?' },
-    { sender: 'user', text: "I'm curious about how you work. Can you explain a bit?" },
+    { 
+      sender: 'user', 
+      senderName: 'User', 
+      text: 'Hello!', 
+      timestamp: '2023-07-15T10:30:00.000Z' 
+    },
+    { 
+      sender: 'ai', 
+      senderName: 'Theo', 
+      text: 'Hi there! How can I assist you today?', 
+      timestamp: '2023-07-15T10:30:05.000Z'
+    },
+    { 
+      sender: 'user', 
+      senderName: 'User', 
+      text: "I'm curious about how you work. Can you explain a bit?", 
+      timestamp: '2023-07-15T10:30:15.000Z'
+    },
   ];
 
   test('renders without crashing', () => {
@@ -44,23 +60,31 @@ describe('ConversationTranscript', () => {
     expect(screen.getByText(/Hi there! How can I assist you today?/i)).toBeInTheDocument();
     expect(screen.getByText(/I'm curious about how you work. Can you explain a bit?/i)).toBeInTheDocument();
     
-    // Check if sender labels are displayed (exact match instead of regex)
-    const userLabels = screen.getAllByText('You');
+    // Check if sender labels are displayed
+    const userLabels = screen.getAllByText('User');
     expect(userLabels).toHaveLength(2);
     
-    const aiLabels = screen.getAllByText('AI');
+    const aiLabels = screen.getAllByText('Theo');
     expect(aiLabels).toHaveLength(1);
+    
+    // Check if timestamps are displayed
+    const timestamps = screen.getAllByText(/\d+:\d+:\d+/);
+    expect(timestamps.length).toBe(3);
   });
 
   test('handles long messages without truncation', () => {
     const longMessages = [
       { 
         sender: 'user', 
-        text: 'Can you recommend a good restaurant?' 
+        senderName: 'User',
+        text: 'Can you recommend a good restaurant?',
+        timestamp: '2023-07-15T10:30:00.000Z'
       },
       { 
         sender: 'ai', 
-        text: 'Well, if you\'re in the mood for something delicious, our Filet Mignon is always a hit—it\'s an 8 oz steak served with garlic mashed potatoes. If seafood is more your style, the Salmon Provençal, grilled with herbs and vegetables, is another fantastic choice. Hungry yet?' 
+        senderName: 'Theo',
+        text: 'Well, if you\'re in the mood for something delicious, our Filet Mignon is always a hit—it\'s an 8 oz steak served with garlic mashed potatoes. If seafood is more your style, the Salmon Provençal, grilled with herbs and vegetables, is another fantastic choice. Hungry yet?',
+        timestamp: '2023-07-15T10:30:05.000Z'
       }
     ];
     
@@ -89,8 +113,18 @@ describe('ConversationTranscript', () => {
   test('handles real-time message transcription with typewriter effect', () => {
     // Start with messages where the last one is NOT from the user
     const initialMessages = [
-      { sender: 'user', text: 'Hello!' },
-      { sender: 'ai', text: 'Hi there! How can I assist you today?' },
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello!',
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: 'Hi there! How can I assist you today?',
+        timestamp: '2023-07-15T10:30:05.000Z'
+      },
     ];
     
     const { rerender } = render(
@@ -113,9 +147,24 @@ describe('ConversationTranscript', () => {
 
     // When updating an existing user message (the last message is from user)
     const updatedMessages = [
-      { sender: 'user', text: 'Hello!' },
-      { sender: 'ai', text: 'Hi there! How can I assist you today?' },
-      { sender: 'user', text: "I'm curious about how you work. Can you explain a bit?" },
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello!',
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: 'Hi there! How can I assist you today?',
+        timestamp: '2023-07-15T10:30:05.000Z'
+      },
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: "I'm curious about how you work. Can you explain a bit?",
+        timestamp: '2023-07-15T10:30:15.000Z'
+      },
     ];
     
     rerender(
@@ -274,10 +323,10 @@ describe('ConversationTranscript', () => {
     expect(transcriptContainer).toBeInTheDocument();
     
     // Check for exact text matches rather than regex
-    const userLabels = screen.getAllByText('You');
+    const userLabels = screen.getAllByText('User');
     expect(userLabels.length).toBe(2);
     
-    const aiLabels = screen.getAllByText('AI');
+    const aiLabels = screen.getAllByText('Theo');
     expect(aiLabels.length).toBe(1);
     
     // Check that the header is rendered correctly

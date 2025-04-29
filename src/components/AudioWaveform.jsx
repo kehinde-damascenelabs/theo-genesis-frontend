@@ -17,7 +17,8 @@ const AudioWaveform = ({
   setIsAISpeaking,
   handleUserTranscript,
   handleAITranscript,
-  clearConversation
+  clearConversation,
+  endSession
 }) => {
   const onUserTranscript = useCallback((transcript) => {
     if (handleUserTranscript && typeof handleUserTranscript === 'function') {
@@ -49,7 +50,8 @@ const AudioWaveform = ({
     barsRef 
   } = useMicrophone({
     onUserTranscript: onUserTranscript,
-    onAITranscript: onAITranscript
+    onAITranscript: onAITranscript,
+    onSessionEnd: endSession
   });
 
   // Update isListening state in parent component if the prop exists

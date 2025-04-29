@@ -1,14 +1,33 @@
 import { useState, useCallback } from 'react';
 
 export const useConversation = (initialMessages = []) => {
-  const [messages, setMessages] = useState(initialMessages);
+  const [conversationData, setConversationData] = useState({
+    messages: initialMessages,
+    sessionStart: new Date().toISOString(),
+    sessionEnd: null
+  });
   const [currentMessage, setCurrentMessage] = useState('');
   const [processingUserInput, setProcessingUserInput] = useState(false);
   const [aiResponsePending, setAiResponsePending] = useState(false);
 
   // Add a new message to the conversation
   const addMessage = useCallback((sender, text, isTyping = false) => {
-    setMessages(prevMessages => [...prevMessages, { sender, text, isTyping }]);
+    const timestamp = new Date().toISOString();
+    const senderName = sender === 'ai' ? 'Theo' : 'User';
+    
+    setConversationData(prevData => ({
+      ...prevData,
+      messages: [
+        ...prevData.messages, 
+        { 
+          sender, 
+          senderName,
+          text, 
+          isTyping,
+          timestamp
+        }
+      ]
+    }));
   }, []);
 
   // Update the current (real-time) message being transcribed
@@ -20,17 +39,14 @@ export const useConversation = (initialMessages = []) => {
   const submitCurrentMessage = useCallback(() => {
     if (currentMessage.trim()) {
       setProcessingUserInput(true);
-      addMessage('user', currentMessage, false); // Changed to false to disable animation
+      addMessage('user', currentMessage, false);
       setCurrentMessage('');
       
-      // Simulate AI "thinking" state - in a real app, this would be triggered when 
-      // the AI actually starts processing or speaking
       setAiResponsePending(true);
       
-      // Clear the processing state after a delay
       setTimeout(() => {
         setProcessingUserInput(false);
-      }, 300); // Reduced from 500ms
+      }, 300);
       
       return currentMessage;
     }
@@ -39,81 +55,95 @@ export const useConversation = (initialMessages = []) => {
 
   // Add an AI response to the conversation
   const addAIResponse = useCallback((text) => {
-    // Add the AI message with isTyping flag to enable animation
     addMessage('ai', text, true);
     
-    // Simulate end of AI response after a delay
     setTimeout(() => {
       setAiResponsePending(false);
       
-      // Update the message to remove isTyping flag
-      setMessages(prevMessages => {
-        const updated = [...prevMessages];
+      setConversationData(prevData => {
+        const updated = [...prevData.messages];
         if (updated.length > 0) {
           const lastMessage = updated[updated.length - 1];
           if (lastMessage.sender === 'ai') {
             updated[updated.length - 1] = { ...lastMessage, isTyping: false };
           }
         }
-        return updated;
+        return {
+          ...prevData,
+          messages: updated
+        };
       });
-    }, 2000); // Delay long enough to show the animation
+    }, 2000);
   }, [addMessage]);
 
   // Handle user transcript event from the realtime API
   const handleUserTranscript = useCallback((transcript) => {
     if (transcript && transcript.trim()) {
       setProcessingUserInput(true);
-      // Update the current message with the transcript
       setCurrentMessage(transcript);
-      // Submit as a completed message immediately without delay
-      addMessage('user', transcript, false); // Changed to false to disable animation
+      addMessage('user', transcript, false);
       setCurrentMessage('');
       
-      // Set AI response pending to show loading
       setAiResponsePending(true);
       
       setTimeout(() => {
         setProcessingUserInput(false);
-      }, 300); // Reduced from 500ms to 300ms
+      }, 300);
     }
   }, [addMessage]);
 
   // Handle AI transcript event from the realtime API
   const handleAITranscript = useCallback((transcript) => {
     if (transcript && transcript.trim()) {
-      // Add with typing animation
       addMessage('ai', transcript, true);
       
-      // Simulate completion of typing after a delay
       setTimeout(() => {
         setAiResponsePending(false);
         
-        // Update the message to remove isTyping flag
-        setMessages(prevMessages => {
-          const updated = [...prevMessages];
+        setConversationData(prevData => {
+          const updated = [...prevData.messages];
           if (updated.length > 0) {
             const lastMessage = updated[updated.length - 1];
             if (lastMessage.sender === 'ai') {
               updated[updated.length - 1] = { ...lastMessage, isTyping: false };
             }
           }
-          return updated;
+          return {
+            ...prevData,
+            messages: updated
+          };
         });
-      }, 2000); // Allow time to see the typing animation
+      }, 2000);
     }
   }, [addMessage]);
 
   // Clear all messages
   const clearConversation = useCallback(() => {
-    setMessages([]);
+    setConversationData({
+      messages: [],
+      sessionStart: new Date().toISOString(),
+      sessionEnd: null
+    });
     setCurrentMessage('');
     setProcessingUserInput(false);
     setAiResponsePending(false);
   }, []);
 
+  // End session and print conversation data
+  const endSession = useCallback(() => {
+    setConversationData(prevData => {
+      const conversationData = {
+        ...prevData,
+        sessionEnd: new Date().toISOString()
+      };
+      
+      return conversationData;
+    });
+  }, []);
+
   return {
-    messages,
+    messages: conversationData.messages,
+    conversationData,
     currentMessage,
     processingUserInput,
     aiResponsePending,
@@ -122,8 +152,9 @@ export const useConversation = (initialMessages = []) => {
     addAIResponse,
     clearConversation,
     handleUserTranscript,
-    handleAITranscript
+    handleAITranscript,
+    endSession
   };
 };
 
-export default useConversation; 
+export default useConversation;

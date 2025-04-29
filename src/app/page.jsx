@@ -21,6 +21,7 @@ import { useConversation } from "@/hooks/useConversation";
 export default function Page(props) {
   const { 
     messages, 
+    conversationData,
     currentMessage, 
     updateCurrentMessage, 
     submitCurrentMessage, 
@@ -29,7 +30,8 @@ export default function Page(props) {
     handleAITranscript,
     processingUserInput,
     aiResponsePending,
-    clearConversation
+    clearConversation,
+    endSession
   } = useConversation([]);
   const [isListening, setIsListening] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -69,6 +71,7 @@ export default function Page(props) {
               handleAITranscript={handleAITranscript}
               processingUserInput={processingUserInput}
               clearConversation={clearConversation}
+              endSession={endSession}
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ 
