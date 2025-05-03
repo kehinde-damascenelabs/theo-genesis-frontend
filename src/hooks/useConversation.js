@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { stopConnection } from '../service/realtimeAPI/stopConnection';
 
 export const useConversation = (initialMessages = []) => {
   const [conversationData, setConversationData] = useState({
@@ -9,6 +10,11 @@ export const useConversation = (initialMessages = []) => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [processingUserInput, setProcessingUserInput] = useState(false);
   const [aiResponsePending, setAiResponsePending] = useState(false);
+  const [connectionDetails, setConnectionDetails] = useState({
+    pc: null,
+    dc: null,
+    audioEl: null
+  });
 
   // Add a new message to the conversation
   const addMessage = useCallback((sender, text, isTyping = false) => {
@@ -129,17 +135,31 @@ export const useConversation = (initialMessages = []) => {
     setAiResponsePending(false);
   }, []);
 
+  // Update WebRTC connection details
+  const updateConnectionDetails = useCallback((details) => {
+    setConnectionDetails(prev => ({
+      ...prev,
+      ...details
+    }));
+  }, []);
+
   // End session and print conversation data
   const endSession = useCallback(() => {
     setConversationData(prevData => {
-      const conversationData = {
+      const updatedData = {
         ...prevData,
         sessionEnd: new Date().toISOString()
       };
       
-      return conversationData;
+      // Send conversation data to be saved along with connection details
+      stopConnection({ 
+        ...connectionDetails,
+        conversationData: updatedData 
+      });
+      
+      return updatedData;
     });
-  }, []);
+  }, [connectionDetails]);
 
   return {
     messages: conversationData.messages,
@@ -153,6 +173,7 @@ export const useConversation = (initialMessages = []) => {
     clearConversation,
     handleUserTranscript,
     handleAITranscript,
+    updateConnectionDetails,
     endSession
   };
 };
