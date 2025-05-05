@@ -69,6 +69,7 @@ export default function Page(props) {
               handleAITranscript={handleAITranscript}
               processingUserInput={processingUserInput}
               clearConversation={clearConversation}
+              messages={messages}
             />
           </Grid>
           <Grid item xs={12} md={6} sx={{ 
