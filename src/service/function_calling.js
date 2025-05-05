@@ -1,4 +1,22 @@
-const fns = {
+const sessionRecorder = require('./sessionRecorder').default;
+
+// Wrap all function calls with recording
+const wrapFunctionWithRecording = (fn, name) => {
+  return async (params) => {
+    try {
+      // Record the function call before execution
+      sessionRecorder.recordFunctionCall(name, params);
+      
+      // Execute the original function
+      return await fn(params);
+    } catch (error) {
+      console.error(`Error executing ${name}:`, error);
+      throw error;
+    }
+  };
+};
+
+const originalFns = {
   fetchWeatherForecast: async ({ zipCode }) => {
     try {
       // const response = await fetch(`http://localhost:3000/weather/forecast?zipCode=${zipCode}`); //DEV
@@ -143,5 +161,11 @@ const fns = {
     }
   }
 };
+
+// Wrap all functions with the recording functionality
+const fns = {};
+Object.keys(originalFns).forEach(fnName => {
+  fns[fnName] = wrapFunctionWithRecording(originalFns[fnName], fnName);
+});
                                                                                                     
 module.exports = fns;
