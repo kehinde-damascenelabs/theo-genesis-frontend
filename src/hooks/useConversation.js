@@ -8,7 +8,12 @@ export const useConversation = (initialMessages = []) => {
 
   // Add a new message to the conversation
   const addMessage = useCallback((sender, text, isTyping = false) => {
-    setMessages(prevMessages => [...prevMessages, { sender, text, isTyping }]);
+    setMessages(prevMessages => [...prevMessages, { 
+      sender, 
+      text, 
+      isTyping,
+      timestamp: new Date().toISOString() // Add timestamp to each message
+    }]);
   }, []);
 
   // Update the current (real-time) message being transcribed
