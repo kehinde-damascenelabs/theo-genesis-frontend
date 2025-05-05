@@ -4,8 +4,8 @@ import { agentPrompt } from '../../utils/helper_func';
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    // const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
+    const response = await fetch("http://localhost:3000/getEKey"); //DEV
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;

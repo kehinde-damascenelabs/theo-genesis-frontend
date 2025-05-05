@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { startConnection } from "../service/realtimeAPI/startConnection";
 import { stopConnection } from "../service/realtimeAPI/stopConnection";
 import { createSilentAudio, requestWakeLock } from '../utils/helper_func';
+import sessionRecorder from '../service/sessionRecorder';
 
 export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
   const [isMicOn, setIsMicOn] = useState(false);
@@ -74,6 +75,7 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
       micSource.connect(mergedAnalyserRef.current);
 
       // Set up remote audio handling
+      let remoteTrack = null;
       if (connectionRef.current.audioEl) {
         const setupRemoteAudio = (stream) => {
           if (stream) {
@@ -82,6 +84,11 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
               remoteSourceRef.current.disconnect();
             }
 
+            // Get first audio track from remote stream
+            if (stream.getAudioTracks().length > 0) {
+              remoteTrack = stream.getAudioTracks()[0];
+            }
+            
             // Create new remote source
             remoteSourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
             // Connect remote audio to both analyzer and gain node
@@ -101,6 +108,10 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
           setupRemoteAudio(e.streams[0]);
         };
       }
+
+      // Start recording session with available tracks
+      const localTrack = microphoneStreamRef.current.getAudioTracks()[0] || null;
+      await sessionRecorder.startSession(localTrack, remoteTrack);
 
       // Set up wake lock
       wakeLockRef.current = await requestWakeLock();
@@ -145,6 +156,11 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
   };
 
   const stopMicrophone = () => {
+    // End the recording session first
+    sessionRecorder.endSession().catch(err => {
+      console.error("Error ending session recording:", err);
+    });
+
     // Clean up WebRTC connection
     if (connectionRef.current) {
       stopConnection(connectionRef.current);
