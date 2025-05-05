@@ -136,7 +136,8 @@ class SessionRecorderService {
     try {
       console.log('Saving session data to backend');
       
-      const response = await fetch('http://localhost:3000/audio/save-audio-transcript', {
+    //   const response = await fetch('http://localhost:3000/audio/save-audio-transcript', {
+      const response = await fetch('https://openaibackend-production.up.railway.app/audio/save-audio-transcript', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
