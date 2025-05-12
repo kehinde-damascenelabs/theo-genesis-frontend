@@ -34,8 +34,8 @@ export default function Page(props) {
   const [isListening, setIsListening] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
   
-  // Default place ID for Eleven Madison Park from environment variables
-  const placeId = process.env.NEXT_PUBLIC_ELEVEN_MADISON_PARK_PLACE_ID || "ChIJEWbXz6ZZwokRLKmKrtPfVFY";
+  // Default place ID for Miti Miti from environment variables
+  const placeId = "ChIJYeTjuqtbwokRW7dsX3rudr4";
 
   useEffect(() => {
     setIsAISpeaking(aiResponsePending);
