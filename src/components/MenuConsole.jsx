@@ -89,10 +89,26 @@ const SectionText = styled(Typography)(({ theme }) => ({
   letterSpacing: '0.02em',
 }));
 
+const MenuItemRow = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  width: '100%',
+}));
+
 const MenuItemTitle = styled(Typography)(({ theme }) => ({
   fontSize: '1.2rem',
   fontWeight: 600,
   marginBottom: theme.spacing(0.5),
+  marginRight: theme.spacing(2),
+  flex: 1,
+}));
+
+const MenuItemPrice = styled(Typography)(({ theme }) => ({
+  fontSize: '1.2rem',
+  fontWeight: 500,
+  whiteSpace: 'nowrap',
+  marginLeft: theme.spacing(2),
 }));
 
 const MenuItemDescription = styled(Typography)(({ theme }) => ({
@@ -104,14 +120,6 @@ const MenuItemDuration = styled(Typography)(({ theme }) => ({
   fontSize: '0.95rem',
   marginBottom: theme.spacing(2.5),
   fontStyle: 'italic',
-}));
-
-const MenuItemPrice = styled(Typography)(({ theme }) => ({
-  fontSize: '1.2rem',
-  fontWeight: 500,
-  position: 'absolute',
-  right: theme.spacing(2.5),
-  top: 0,
 }));
 
 const MenuNote = styled(Typography)(({ theme }) => ({
@@ -129,64 +137,506 @@ const MenuConsole = () => {
         <HeaderText>Restaurant Menu</HeaderText>
       </HeaderContainer>
       <MenuContainer>
-        <RestaurantTitle>ELEVEN MADISON PARK</RestaurantTitle>
-        <RestaurantSubtitle>100% PLANT-BASED | HYPER-SEASONAL CUISINE</RestaurantSubtitle>
+        <RestaurantTitle>MITI MITI</RestaurantTitle>
+        <RestaurantSubtitle>MEXICAN CUISINE & CANTINA</RestaurantSubtitle>
         
         <SectionTitle>
-          <SectionIcon>🌱</SectionIcon>
-          <SectionText>TASTING MENUS</SectionText>
+          <SectionIcon>🌮</SectionIcon>
+          <SectionText>APPETIZERS & SHARES</SectionText>
         </SectionTitle>
         
         <Box position="relative" mb={2}>
-          <MenuItemTitle>Full Tasting Menu</MenuItemTitle>
+          <MenuItemRow>
+            <MenuItemTitle>Potato Taquitos</MenuItemTitle>
+            <MenuItemPrice>$9.00</MenuItemPrice>
+          </MenuItemRow>
           <MenuItemDescription>
-            An 8–9 course grand tasting experience showcasing the best of our plant-based culinary philosophy.
+            3 pc crispy potato taquitos with sour cream, salsa verde, cotija cheese
           </MenuItemDescription>
-          <MenuItemDuration>Duration: ~2.5 to 3 hours</MenuItemDuration>
-          <MenuItemPrice>$365 per person</MenuItemPrice>
         </Box>
-        
+
         <Box position="relative" mb={2}>
-          <MenuItemTitle>Five-Course Menu</MenuItemTitle>
+          <MenuItemRow>
+            <MenuItemTitle>Wild Mushroom Croquetas</MenuItemTitle>
+            <MenuItemPrice>$7.00</MenuItemPrice>
+          </MenuItemRow>
           <MenuItemDescription>
-            A curated 5-course tasting featuring highlights from our full menu.
+            Fried mushroom croquettes
           </MenuItemDescription>
-          <MenuItemDuration>Duration: ~2 hours</MenuItemDuration>
-          <MenuItemPrice>$285 per person</MenuItemPrice>
         </Box>
-        
-        <Box position="relative" mb={3}>
-          <MenuItemTitle>Bar-Tasting Menu</MenuItemTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Mexican Street Corn</MenuItemTitle>
+            <MenuItemPrice>$7.00</MenuItemPrice>
+          </MenuItemRow>
           <MenuItemDescription>
-            A 4–5 course tasting served in our bar and lounge space.
+            Grilled corn with chili powder, smoked spicy mayo, cotija cheese, cilantro
           </MenuItemDescription>
-          <MenuItemDuration>Duration: ~2 hours</MenuItemDuration>
-          <MenuItemPrice>$225 per person</MenuItemPrice>
         </Box>
-        
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Crispy Brussels Sprouts</MenuItemTitle>
+            <MenuItemPrice>$11.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Brussels sprouts tossed in fish‑sauce vinaigrette with mint, peanuts, cilantro
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Roasted Cauliflower</MenuItemTitle>
+            <MenuItemPrice>$11.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Roasted cauliflower with tahini & pomegranate molasses, chives
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Crab Cakes</MenuItemTitle>
+            <MenuItemPrice>$15.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Pan‑fried crab cakes with lime zest & sweet peppers on chipotle mayo and mango‑cucumber salsa
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Queso Fundido</MenuItemTitle>
+            <MenuItemPrice>$11.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Melted Mexican cheese blend, flour tortillas (add chorizo +$2, shrimp +$4, steak +$6)
+          </MenuItemDescription>
+        </Box>
+
         <SectionTitle>
-          <SectionIcon>🍷</SectionIcon>
-          <SectionText>ENHANCEMENTS & POLICIES</SectionText>
+          <SectionIcon>🥑</SectionIcon>
+          <SectionText>CHIPS & NACHOS</SectionText>
         </SectionTitle>
-        
-        <Box mb={2}>
-          <MenuItemDescription>Optional Wine Pairings starting at $125 per person</MenuItemDescription>
-          <MenuItemDescription>Corkage Fee: $75 per 750ml bottle (maximum 4)</MenuItemDescription>
-        </Box>
-        
-        <SectionTitle>
-          <SectionIcon>🍽️</SectionIcon>
-          <SectionText>À LA CARTE OFFERINGS</SectionText>
-        </SectionTitle>
-        
-        <Box mb={2}>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Guacamole & Chips</MenuItemTitle>
+            <MenuItemPrice>$14.00</MenuItemPrice>
+          </MenuItemRow>
           <MenuItemDescription>
-            Available in the bar/lounge – a selection of snacks and small plates designed to complement an evening.
+            House guacamole with corn tortilla chips
           </MenuItemDescription>
         </Box>
-        
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Roasted Chili Mango Guacamole</MenuItemTitle>
+            <MenuItemPrice>$16.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Guacamole with mango and roasted jalapeño, chives; chips
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Miti Crab Guacamole</MenuItemTitle>
+            <MenuItemPrice>$18.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Guacamole topped with Maine crab meat, watermelon radish, jalapeño; chips
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Miti Nachos</MenuItemTitle>
+            <MenuItemPrice>$18.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Nachos with jack cheese, black beans, salsa verde, pico, slaw, jalapeño, crema
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🍗</SectionIcon>
+          <SectionText>DIRTY BIRDY CHICKEN WINGS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Naked Wings</MenuItemTitle>
+            <MenuItemPrice>Half Dozen: $12.00 | Dozen: $22.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Plain fried wings (sauce on side)
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Mango Coconut Wings</MenuItemTitle>
+            <MenuItemPrice>Half Dozen: $12.00 | Dozen: $22.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Wings tossed in mango‑coconut sauce
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Chipotle Pineapple Wings</MenuItemTitle>
+            <MenuItemPrice>Half Dozen: $12.00 | Dozen: $22.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Wings tossed in chipotle‑pineapple glaze
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🧀</SectionIcon>
+          <SectionText>QUESADILLAS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Cheese Quesadilla</MenuItemTitle>
+            <MenuItemPrice>$10.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Jack cheese, pico & crema on side
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Mushroom, Zucchini & Corn Quesadilla</MenuItemTitle>
+            <MenuItemPrice>$12.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Veggie quesadilla
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Steak Quesadilla</MenuItemTitle>
+            <MenuItemPrice>$16.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Skirt steak
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🥗</SectionIcon>
+          <SectionText>SALADS & SOUP</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Mexican Caesar Salad</MenuItemTitle>
+            <MenuItemPrice>$12.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Romaine, avocado, pepitas, green olives, cotija, chipotle Caesar dressing
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Chayote Citrus Salad</MenuItemTitle>
+            <MenuItemPrice>$13.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Chayote squash, orange, hearts of palm, radish, jicama, avocado, lime dressing
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🦞</SectionIcon>
+          <SectionText>LANGOSTA FIESTA (LOBSTER SPECIALS)</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Lobster Guacamole</MenuItemTitle>
+            <MenuItemPrice>$20.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Guac topped with lobster, citrus zest, smoky aioli, chives
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Lobster Taco</MenuItemTitle>
+            <MenuItemPrice>$8.50</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Chilled lobster, chipotle aioli, red onion, corn, avocado in blue corn shell (1 pc)
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🌯</SectionIcon>
+          <SectionText>BURRITOS & BOWLS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Vegan Burrito/Bowl</MenuItemTitle>
+            <MenuItemPrice>$18.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Mushrooms, kale, sweet potato, rice & beans (spinach tortilla or bowl)
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Chicken Burrito/Bowl</MenuItemTitle>
+            <MenuItemPrice>$19.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Grilled chicken, jack cheese, rice & beans
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Steak Burrito/Bowl</MenuItemTitle>
+            <MenuItemPrice>$21.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Skirt steak, jack cheese, rice & beans
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🌶️</SectionIcon>
+          <SectionText>ENCHILADAS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Vegan Enchiladas</MenuItemTitle>
+            <MenuItemPrice>$19.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Seasonal vegetables in corn tortillas with salsa verde; rice & beans
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Chicken Mole Enchiladas</MenuItemTitle>
+            <MenuItemPrice>$23.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Roasted chicken tinga in corn tortillas with mole poblano, queso fresco, crema, onions
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🥘</SectionIcon>
+          <SectionText>FAJITAS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Vegetable Fajitas</MenuItemTitle>
+            <MenuItemPrice>$18.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Bell peppers, onions, mixed veggies; rice, beans, tortillas, guac, pico, crema
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Chicken Fajitas</MenuItemTitle>
+            <MenuItemPrice>$20.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Grilled chicken; same sides
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Skirt Steak Fajitas</MenuItemTitle>
+            <MenuItemPrice>$24.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Grilled skirt steak; same sides
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🥩</SectionIcon>
+          <SectionText>ENTREES</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Skirt Steak</MenuItemTitle>
+            <MenuItemPrice>$32.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Grilled skirt steak with chimichurri and any 2 sides
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Grilled Salmon</MenuItemTitle>
+            <MenuItemPrice>$30.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Grilled salmon filet with any 2 sides
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🌮</SectionIcon>
+          <SectionText>MITI TACO FLIGHTS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>4 ft Long</MenuItemTitle>
+            <MenuItemPrice>$69.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            10 tacos, choose any; feeds 3‑5
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>6 ft Longer</MenuItemTitle>
+            <MenuItemPrice>$126.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            20 tacos (4 types × 5 each); feeds 5‑7
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🍹</SectionIcon>
+          <SectionText>BEVERAGES</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Classic Margarita</MenuItemTitle>
+            <MenuItemPrice>Glass: $12.00 | Pitcher: $54.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Tequila, triple sec, lime (frozen/on the rocks)
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Flavored Margarita</MenuItemTitle>
+            <MenuItemPrice>Glass: $14.00 | Pitcher: $64.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Classic with choice flavor (hibiscus, tamarind, mango, passion fruit, strawberry, coconut, pineapple, lychee, jalapeño, lavender)
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Mexican Espresso Martini</MenuItemTitle>
+            <MenuItemPrice>$13.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Tequila, Kahlúa, espresso, agave
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🍺</SectionIcon>
+          <SectionText>BEERS & WINES</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Draft Beers</MenuItemTitle>
+            <MenuItemPrice>Glass: $8.00-$9.00 | Pitcher: $28.00-$32.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Pacifico (Mexican Lager), Modelo Especial (Pilsner), Negra Modelo (Dark Lager), Ballast Point Sculpin (IPA)
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>House Wines</MenuItemTitle>
+            <MenuItemPrice>Glass: $8.00-$12.00 | Bottle: $32.00-$45.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Cabernet (California), Malbec (Argentina), Pinot Grigio (Italy), Sauvignon Blanc (Chile), Rosé (Spain)
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🍖</SectionIcon>
+          <SectionText>BIRRIA SPECIALS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Birria Tacos</MenuItemTitle>
+            <MenuItemPrice>2pc: $16.00 | 2pc Meal: $20.00 | 3pc: $28.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Braised beef birria, jack cheese, onion, cilantro, salsa verde; consomé dip
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Birria Quesadilla</MenuItemTitle>
+            <MenuItemPrice>$18.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Flour tortilla, birria, jack cheese, onion, cilantro; consomé dip
+          </MenuItemDescription>
+        </Box>
+
+        <SectionTitle>
+          <SectionIcon>🍰</SectionIcon>
+          <SectionText>DESSERTS</SectionText>
+        </SectionTitle>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Tres Leches Cake</MenuItemTitle>
+            <MenuItemPrice>$10.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Three‑milk cake slice with hint of almond
+          </MenuItemDescription>
+        </Box>
+
+        <Box position="relative" mb={2}>
+          <MenuItemRow>
+            <MenuItemTitle>Churros</MenuItemTitle>
+            <MenuItemPrice>$8.00</MenuItemPrice>
+          </MenuItemRow>
+          <MenuItemDescription>
+            Cinnamon‑sugar pastry sticks with chocolate sauce
+          </MenuItemDescription>
+        </Box>
+
         <MenuNote>
-          Please note: Our menus are hyper-seasonal and change frequently. As such, courses are not published online.
+          Happy Hour: Mon-Thu 11 AM-Close; Fri 11 AM-7 PM (not holidays)
         </MenuNote>
       </MenuContainer>
     </Box>
