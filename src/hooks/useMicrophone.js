@@ -4,7 +4,7 @@ import { stopConnection } from "../service/realtimeAPI/stopConnection";
 import { createSilentAudio, requestWakeLock } from '../utils/helper_func';
 import sessionRecorder from '../service/sessionRecorder';
 
-export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
+export const useMicrophone = ({ onUserTranscript, onAITranscript, onSessionEnd } = {}) => {
   const [isMicOn, setIsMicOn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
@@ -216,6 +216,11 @@ export const useMicrophone = ({ onUserTranscript, onAITranscript } = {}) => {
     if (silentAudioRef.current) {
       silentAudioRef.current.pause();
       silentAudioRef.current = null;
+    }
+
+    // Call onSessionEnd callback if provided to end and print the conversation
+    if (onSessionEnd && typeof onSessionEnd === 'function') {
+      onSessionEnd();
     }
 
     setIsMicOn(false);

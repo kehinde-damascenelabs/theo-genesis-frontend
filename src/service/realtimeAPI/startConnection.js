@@ -1,15 +1,15 @@
 import fns from '../function_calling';
 import { agentPrompt } from '../../utils/helper_func';
 import { addFunctionCallToSession, addAIAudioToSession } from '../../utils/transcriptService';
+import { API_BASE_URL } from '../../utils/apiConfig';
 
 // Export an asynchronous function that sets up a WebRTC connection and initializes an AI session.
 export async function startConnection(callbacks = {}) {
     // Create an array to track function calls
     const functionCalls = [];
-    
+
     // Fetch an ephemeral key from the backend service to authenticate the AI session.
-    const response = await fetch("https://openaibackend-production.up.railway.app/getEKey");
-    // const response = await fetch("http://localhost:3000/getEKey"); //DEV
+    const response = await fetch(`${API_BASE_URL}/getEKey`);
     const json = await response.json();
     // Extract the ephemeral key from the JSON response.
     const EPHEMERAL_KEY = json.ephemeralKey;

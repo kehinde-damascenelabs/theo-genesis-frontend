@@ -6,8 +6,18 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 describe('ConversationTranscript Theme Support', () => {
   const sampleMessages = [
-    { sender: 'user', text: 'Hello!' },
-    { sender: 'ai', text: 'Hi there! How can I assist you today?' },
+    { 
+      sender: 'user',
+      senderName: 'User',
+      text: 'Hello!',
+      timestamp: '2023-07-15T10:30:00.000Z'
+    },
+    { 
+      sender: 'ai',
+      senderName: 'Theo', 
+      text: 'Hi there! How can I assist you today?',
+      timestamp: '2023-07-15T10:30:05.000Z'
+    },
   ];
 
   test('renders correctly with light theme', () => {

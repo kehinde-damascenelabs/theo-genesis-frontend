@@ -1,4 +1,7 @@
-export function stopConnection({ pc, dc, audioEl }) {
+// Keep track of saved sessions to prevent duplicate saves
+const savedSessionIds = new Set();
+
+export function stopConnection({ pc, dc, audioEl, conversationData }) {
     // -------------------------------
     // Clean up the Data Channel (dc)
     // -------------------------------
@@ -78,4 +81,45 @@ export function stopConnection({ pc, dc, audioEl }) {
             console.error('Error cleaning up peer connection:', error);
         }
     }
+
+    // Save conversation data if available and not already saved
+    if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
+        // Generate a unique ID for this session using the timestamp
+        const sessionUniqueId = conversationData.sessionStart || new Date().toISOString();
+        
+        // Only save if this session hasn't been saved before
+        if (!savedSessionIds.has(sessionUniqueId)) {
+            savedSessionIds.add(sessionUniqueId);
+            saveConversationData(conversationData);
+        } else {
+            console.log('Session transcript already saved, skipping duplicate save');
+        }
+    }
+}
+
+// Function to save conversation data to the backend
+function saveConversationData(conversationData) {
+    // Define your backend URL - adjust this to your actual backend URL
+    const backendUrl = 'http://localhost:3000'; // Make sure this matches your actual backend port
+    
+    // Send data to the backend - backend will handle session counting
+    fetch(`${backendUrl}/save-transcript`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            sessionData: conversationData
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log("Transcript saved successfully");
+        } else {
+            console.error('Failed to save session transcript:', response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving session transcript:', error);
+    });
 }

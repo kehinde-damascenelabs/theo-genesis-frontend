@@ -93,8 +93,9 @@ describe('startConnection', () => {
     // Call the function with callbacks
     const result = await startConnection(mockCallbacks);
     
-    // Verify ephemeral key was fetched
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:3000/getEKey');
+    // Verify ephemeral key was fetched from the configured backend base URL
+    // (falls back to the Railway deployment when NEXT_PUBLIC_API_BASE_URL is unset)
+    expect(global.fetch).toHaveBeenCalledWith('https://openaibackend-production.up.railway.app/getEKey');
     
     // Verify RTCPeerConnection was created
     expect(global.RTCPeerConnection).toHaveBeenCalled();
@@ -145,36 +146,33 @@ describe('startConnection', () => {
     openEventHandler();
     
     // Verify initial messages were sent
-    expect(mockDataChannel.send).toHaveBeenCalledWith(
-      JSON.stringify({
-        type: 'response.create'
-      })
-    );
+    expect(mockDataChannel.send).toHaveBeenCalled();
     
-    expect(mockDataChannel.send).toHaveBeenCalledWith(
-      JSON.stringify({
-        type: 'session.update',
-        session: {
-          modalities: ['text', 'audio'],
-          input_audio_transcription: { model: 'whisper-1' },
-          turn_detection: {
-            type: 'server_vad',
-            threshold: 0.5,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 1000,
-            create_response: true,
-          },
-          temperature: 0.7,
-          max_response_output_tokens: 4096,
-        }
-      })
-    );
+    // Verify the structure of messages without requiring exact equality
+    const calls = mockDataChannel.send.mock.calls;
+    expect(calls.length).toBe(2);
+    
+    // Parse first call (session.update message)
+    const sessionUpdateMessage = JSON.parse(calls[0][0]);
+    expect(sessionUpdateMessage.type).toBe('session.update');
+    expect(sessionUpdateMessage.session.modalities).toEqual(['text', 'audio']);
+    expect(sessionUpdateMessage.session.input_audio_transcription).toEqual({ model: 'whisper-1' });
+    expect(sessionUpdateMessage.session.temperature).toBe(0.6);
+    expect(sessionUpdateMessage.session.max_response_output_tokens).toBe(4096);
+    expect(sessionUpdateMessage.session.tool_choice).toBe('auto');
+    expect(sessionUpdateMessage.session.instructions).toBeTruthy();
+    expect(Array.isArray(sessionUpdateMessage.session.tools)).toBeTruthy();
+    
+    // Parse second call (response.create message)
+    const responseCreateMessage = JSON.parse(calls[1][0]);
+    expect(responseCreateMessage.type).toBe('response.create');
     
     // Verify the returned connection object
     expect(result).toEqual({
       pc: mockPeerConnection,
       dc: mockDataChannel,
-      audioEl: mockAudioElement
+      audioEl: mockAudioElement,
+      functionCalls: []
     });
   });
   

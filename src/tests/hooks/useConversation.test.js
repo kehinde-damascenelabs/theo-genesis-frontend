@@ -13,7 +13,10 @@ describe('useConversation', () => {
     const { result } = renderHook(() => useConversation());
     
     expect(result.current.messages).toEqual([]);
+    expect(result.current.conversationData.messages).toEqual([]);
     expect(result.current.currentMessage).toBe('');
+    expect(result.current.conversationData.sessionStart).toBeDefined();
+    expect(result.current.conversationData.sessionEnd).toBeNull();
   });
 
   test('initializes with provided messages', () => {
@@ -25,6 +28,7 @@ describe('useConversation', () => {
     const { result } = renderHook(() => useConversation(initialMessages));
     
     expect(result.current.messages).toEqual(initialMessages);
+    expect(result.current.conversationData.messages).toEqual(initialMessages);
     expect(result.current.currentMessage).toBe('');
   });
 
@@ -49,10 +53,13 @@ describe('useConversation', () => {
       result.current.submitCurrentMessage();
     });
     
-    // Verify message is added without animation (isTyping should be false)
-    expect(result.current.messages).toEqual([
-      { sender: 'user', text: 'Hello, AI!', isTyping: false }
-    ]);
+    // Check message has sender, timestamp and name properties
+    expect(result.current.messages.length).toBe(1);
+    expect(result.current.messages[0].sender).toBe('user');
+    expect(result.current.messages[0].text).toBe('Hello, AI!');
+    expect(result.current.messages[0].isTyping).toBe(false);
+    expect(result.current.messages[0].senderName).toBe('User');
+    expect(result.current.messages[0].timestamp).toBeDefined();
     
     // Verify processingUserInput is set to true initially
     expect(result.current.processingUserInput).toBe(true);
@@ -88,9 +95,13 @@ describe('useConversation', () => {
     // Forward timers to simulate typing animation completion
     jest.advanceTimersByTime(100);
     
-    expect(result.current.messages).toEqual([
-      { sender: 'ai', text: 'I am an AI assistant.', isTyping: true }
-    ]);
+    // Check message has expected properties
+    expect(result.current.messages.length).toBe(1);
+    expect(result.current.messages[0].sender).toBe('ai');
+    expect(result.current.messages[0].senderName).toBe('Theo');
+    expect(result.current.messages[0].text).toBe('I am an AI assistant.');
+    expect(result.current.messages[0].isTyping).toBe(true);
+    expect(result.current.messages[0].timestamp).toBeDefined();
     
     // Complete the animation
     jest.advanceTimersByTime(2000);
@@ -109,7 +120,10 @@ describe('useConversation', () => {
     });
     
     expect(result.current.messages).toEqual([]);
+    expect(result.current.conversationData.messages).toEqual([]);
     expect(result.current.currentMessage).toBe('');
+    expect(result.current.conversationData.sessionStart).toBeDefined();
+    expect(result.current.conversationData.sessionEnd).toBeNull();
   });
 
   test('handles user transcript without animation delay', () => {
@@ -119,10 +133,13 @@ describe('useConversation', () => {
       result.current.handleUserTranscript('This is a test transcript');
     });
     
-    // Message should be added immediately with isTyping=false
-    expect(result.current.messages).toEqual([
-      { sender: 'user', text: 'This is a test transcript', isTyping: false }
-    ]);
+    // Check message has expected properties
+    expect(result.current.messages.length).toBe(1);
+    expect(result.current.messages[0].sender).toBe('user');
+    expect(result.current.messages[0].senderName).toBe('User');
+    expect(result.current.messages[0].text).toBe('This is a test transcript');
+    expect(result.current.messages[0].isTyping).toBe(false);
+    expect(result.current.messages[0].timestamp).toBeDefined();
     
     // Check that currentMessage is reset immediately
     expect(result.current.currentMessage).toBe('');
@@ -145,10 +162,13 @@ describe('useConversation', () => {
       result.current.handleAITranscript('AI response transcript');
     });
     
-    // Check that message is added with isTyping flag
-    expect(result.current.messages).toEqual([
-      { sender: 'ai', text: 'AI response transcript', isTyping: true }
-    ]);
+    // Check message has expected properties
+    expect(result.current.messages.length).toBe(1);
+    expect(result.current.messages[0].sender).toBe('ai');
+    expect(result.current.messages[0].senderName).toBe('Theo');
+    expect(result.current.messages[0].text).toBe('AI response transcript');
+    expect(result.current.messages[0].isTyping).toBe(true);
+    expect(result.current.messages[0].timestamp).toBeDefined();
     
     // Complete typing animation
     act(() => {
@@ -166,5 +186,15 @@ describe('useConversation', () => {
     
     // No messages should be added for empty transcripts
     expect(result.current.messages).toEqual([]);
+  });
+
+  test('endSession sets sessionEnd timestamp', () => {
+    const { result } = renderHook(() => useConversation([]));
+    
+    act(() => {
+      result.current.endSession();
+    });
+    
+    expect(result.current.conversationData.sessionEnd).toBeDefined();
   });
 }); 

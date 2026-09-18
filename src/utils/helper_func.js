@@ -28,7 +28,7 @@ Let the example below serve as inspiration for structuring the user journey. DO 
     *UI Action Note: Carousel shifts to → Menu tab*
    *Show the menu and ask what catches the user’s eye or if they’d like a suggestion.*  
 
-4. **Calendar Panel **  
+4. **Calendar Panel **
     *UI Action Note: Carousel shifts to → Calendar tab*
    *Walk the user through making a reservation by asking for one or two details at a time.*  
 

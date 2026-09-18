@@ -156,6 +156,15 @@ const LoadingDotsSpan = styled('span')(({ theme }) => ({
   }
 }));
 
+const TimeStamp = styled(Typography)(({ theme }) => ({
+  fontSize: '0.7rem',
+  color: theme.palette.mode === 'dark' 
+    ? theme.palette.grey[600] 
+    : theme.palette.grey[500],
+  marginTop: theme.spacing(0.5),
+  textAlign: 'right',
+}));
+
 const ConversationTranscript = ({ 
   messages = [], 
   isListening = false,
@@ -397,7 +406,7 @@ const ConversationTranscript = ({
           <MessageContainer key={index} sender={message.sender} data-testid={`message-${index}`}>
             <MessageBubble sender={message.sender}>
               <SenderLabel variant="subtitle2" sender={message.sender}>
-                {message.sender === 'user' ? 'You' : 'AI'}
+                {message.senderName || (message.sender === 'user' ? 'You' : 'Theo')}
               </SenderLabel>
               {shouldShowLoadingDots(message, index) ? (
                 <LoadingDotsSpan>
@@ -409,6 +418,11 @@ const ConversationTranscript = ({
                 <MessageText variant="body1" data-testid={`message-text-${index}`}>
                   {getDisplayText(message, index)}
                 </MessageText>
+              )}
+              {message.timestamp && (
+                <TimeStamp>
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </TimeStamp>
               )}
             </MessageBubble>
           </MessageContainer>

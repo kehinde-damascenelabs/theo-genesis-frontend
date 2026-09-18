@@ -5,69 +5,55 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const theme = createTheme();
 
+const renderMenu = () =>
+  render(
+    <ThemeProvider theme={theme}>
+      <MenuConsole />
+    </ThemeProvider>
+  );
+
 describe('MenuConsole', () => {
   it('renders restaurant name and subtitle', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MenuConsole />
-      </ThemeProvider>
-    );
-    
-    expect(screen.getByText('ELEVEN MADISON PARK')).toBeInTheDocument();
-    expect(screen.getByText('100% PLANT-BASED | HYPER-SEASONAL CUISINE')).toBeInTheDocument();
+    renderMenu();
+
+    expect(screen.getByText('MITI MITI')).toBeInTheDocument();
+    expect(screen.getByText('MEXICAN CUISINE & CANTINA')).toBeInTheDocument();
   });
-  
-  it('renders tasting menu section with correct options', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MenuConsole />
-      </ThemeProvider>
-    );
-    
-    expect(screen.getByText('TASTING MENUS')).toBeInTheDocument();
-    expect(screen.getByText('Full Tasting Menu')).toBeInTheDocument();
-    expect(screen.getByText('Five-Course Menu')).toBeInTheDocument();
-    expect(screen.getByText('Bar-Tasting Menu')).toBeInTheDocument();
-    
-    expect(screen.getByText('$365 per person')).toBeInTheDocument();
-    expect(screen.getByText('$285 per person')).toBeInTheDocument();
-    expect(screen.getByText('$225 per person')).toBeInTheDocument();
+
+  it('renders the appetizers section with correct items and prices', () => {
+    renderMenu();
+
+    expect(screen.getByText('APPETIZERS & SHARES')).toBeInTheDocument();
+    expect(screen.getByText('Potato Taquitos')).toBeInTheDocument();
+    expect(screen.getByText('Wild Mushroom Croquetas')).toBeInTheDocument();
+    expect(screen.getByText('Crab Cakes')).toBeInTheDocument();
+
+    expect(screen.getByText('$9.00')).toBeInTheDocument();
+    expect(screen.getAllByText('$7.00').length).toBeGreaterThan(0);
+    expect(screen.getByText('$15.00')).toBeInTheDocument();
   });
-  
-  it('renders enhancements and policies section', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MenuConsole />
-      </ThemeProvider>
-    );
-    
-    expect(screen.getByText('ENHANCEMENTS & POLICIES')).toBeInTheDocument();
-    expect(screen.getByText('Optional Wine Pairings starting at $125 per person')).toBeInTheDocument();
-    expect(screen.getByText('Corkage Fee: $75 per 750ml bottle (maximum 4)')).toBeInTheDocument();
+
+  it('renders the beverages section', () => {
+    renderMenu();
+
+    expect(screen.getByText('BEVERAGES')).toBeInTheDocument();
+    expect(screen.getByText('Classic Margarita')).toBeInTheDocument();
+    expect(screen.getByText('Glass: $12.00 | Pitcher: $54.00')).toBeInTheDocument();
   });
-  
-  it('renders a la carte offerings section', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MenuConsole />
-      </ThemeProvider>
-    );
-    
-    expect(screen.getByText('À LA CARTE OFFERINGS')).toBeInTheDocument();
+
+  it('renders the entrees section', () => {
+    renderMenu();
+
+    expect(screen.getByText('ENTREES')).toBeInTheDocument();
+    expect(screen.getByText('Skirt Steak')).toBeInTheDocument();
+    expect(screen.getByText('Grilled Salmon')).toBeInTheDocument();
+  });
+
+  it('renders the closing menu note', () => {
+    renderMenu();
+
     expect(
-      screen.getByText('Available in the bar/lounge – a selection of snacks and small plates designed to complement an evening.')
+      screen.getByText('Happy Hour: Mon-Thu 11 AM-Close; Fri 11 AM-7 PM (not holidays)')
     ).toBeInTheDocument();
   });
-  
-  it('renders menu note', () => {
-    render(
-      <ThemeProvider theme={theme}>
-        <MenuConsole />
-      </ThemeProvider>
-    );
-    
-    expect(
-      screen.getByText('Please note: Our menus are hyper-seasonal and change frequently. As such, courses are not published online.')
-    ).toBeInTheDocument();
-  });
-}); 
+});

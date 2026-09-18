@@ -3,6 +3,8 @@
  * This is designed for developer/investor usage, not end-users
  */
 
+import { API_BASE_URL } from './apiConfig';
+
 // Session state tracking
 let currentSessionData = null;
 let isSaving = false;
@@ -147,9 +149,7 @@ export const saveSessionTranscript = async (additionalMetadata = {}) => {
     
     console.log('Sending consolidated transcript payload to backend:', payload);
     
-    // Send to backend API - use local development endpoint
-    // const response = await fetch('http://localhost:3000/api/save-transcript', { //DEV
-    const response = await fetch('https://openaibackend-production.up.railway.app/api/save-transcript', {
+    const response = await fetch(`${API_BASE_URL}/api/save-transcript`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -228,8 +228,7 @@ export const saveTranscript = async (messages, functionCalls, sessionData = {}) 
     
     console.log('LEGACY: Sending transcript payload to backend:', payload);
     
-    // Send to backend API
-    const response = await fetch('http://localhost:3000/api/save-transcript', {
+    const response = await fetch(`${API_BASE_URL}/api/save-transcript`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

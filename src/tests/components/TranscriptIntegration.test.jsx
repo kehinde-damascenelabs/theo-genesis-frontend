@@ -26,8 +26,20 @@ describe('TranscriptIntegration', () => {
   test('shows loading animation when AI is speaking', () => {
     // Mock the useConversation hook with a value that indicates AI is speaking
     const mockMessages = [
-      { sender: 'user', text: 'Hello', isTyping: false },
-      { sender: 'ai', text: 'This is an AI response', isTyping: true }
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: 'This is an AI response', 
+        isTyping: true,
+        timestamp: '2023-07-15T10:30:05.000Z'
+      }
     ];
     
     useConversation.mockReturnValue({
@@ -55,8 +67,8 @@ describe('TranscriptIntegration', () => {
       jest.advanceTimersByTime(100);
     });
     
-    // Verify AI message shows typing indicator (since isTyping is true)
-    expect(screen.getByText('AI')).toBeInTheDocument(); 
+    // Verify AI message shows correct sender name (now 'Theo' instead of 'AI')
+    expect(screen.getByText('Theo')).toBeInTheDocument(); 
   });
 
   test('handles long AI responses correctly', () => {
@@ -71,8 +83,20 @@ describe('TranscriptIntegration', () => {
     `.trim().replace(/\s+/g, ' ');
     
     const mockMessages = [
-      { sender: 'user', text: 'What do you recommend from the menu?', isTyping: false },
-      { sender: 'ai', text: longAIResponse, isTyping: true }
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'What do you recommend from the menu?', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: longAIResponse, 
+        isTyping: true,
+        timestamp: '2023-07-15T10:30:05.000Z'
+      }
     ];
     
     // Render the component with a long AI message that's still typing
@@ -138,7 +162,13 @@ describe('TranscriptIntegration', () => {
     
     // Stage 2: User message complete, AI is responding
     const userMessageComplete = [
-      { sender: 'user', text: 'Hello world', isTyping: false }
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello world', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:00.000Z'
+      }
     ];
     
     rerender(
@@ -157,8 +187,20 @@ describe('TranscriptIntegration', () => {
     
     // Stage 3: AI response begins
     const aiResponding = [
-      { sender: 'user', text: 'Hello world', isTyping: false },
-      { sender: 'ai', text: 'Hi there', isTyping: true }
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello world', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: 'Hi there', 
+        isTyping: true,
+        timestamp: '2023-07-15T10:30:05.000Z'
+      }
     ];
     
     rerender(
@@ -172,8 +214,8 @@ describe('TranscriptIntegration', () => {
       </TestWrapper>
     );
     
-    // Verify AI label is present
-    expect(screen.getAllByText('AI').length).toBe(1);
+    // Verify AI label is present - now "Theo" instead of "AI"
+    expect(screen.getAllByText('Theo').length).toBe(1);
     
     // Advance timers to complete typewriter effect
     act(() => {
@@ -182,8 +224,20 @@ describe('TranscriptIntegration', () => {
     
     // Stage 4: Complete conversation
     const conversationComplete = [
-      { sender: 'user', text: 'Hello world', isTyping: false },
-      { sender: 'ai', text: 'Hi there', isTyping: false }
+      { 
+        sender: 'user', 
+        senderName: 'User',
+        text: 'Hello world', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:00.000Z'
+      },
+      { 
+        sender: 'ai', 
+        senderName: 'Theo',
+        text: 'Hi there', 
+        isTyping: false,
+        timestamp: '2023-07-15T10:30:05.000Z'
+      }
     ];
     
     rerender(
