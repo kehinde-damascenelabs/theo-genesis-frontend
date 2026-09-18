@@ -1,46 +1,58 @@
-# AI Voice Agent - Research Prototype
+# Theo Genesis — Frontend
 
-This is the first implementation of an AI voice bot designed for research purposes. This version will explore how users interact with a general AI voice agent. Users will engage in conversation with a witty [redacted] AI agent, providing insights into user behavior and interaction patterns.
+A browser-based voice agent prototype for restaurant scheduling: real-time spoken conversation over WebRTC,
+straight to OpenAI's Realtime API, with tool calls that check the weather, pull up the menu, and book a table on
+Google Calendar.
 
-## Setup Instructions
+This was an early, pre-company research prototype exploring what became
+[Theo](https://github.com/kehinde-damascenelabs), Damascene Labs' AI voice platform. It predates the company and is
+not under active development — kept public as a reference for the WebRTC + OpenAI Realtime integration pattern it
+implements. Full architecture, route list, and known issues are documented in the paired backend's
+[theo-genesis-backend README](https://github.com/kehinde-damascenelabs/theo-genesis-backend).
 
-### 1. Start the Backend Server
-Before running the frontend, start the backend server by executing:
+## What's actually interesting here
+
+The client negotiates WebRTC directly with OpenAI's Realtime API — audio never round-trips through this app's own
+backend. The backend's only job is to hand the browser a short-lived ephemeral key so a long-lived secret never
+reaches the client. Tool calls (booking, weather, menu lookups) arrive over the WebRTC data channel mid-conversation
+and are handled in [`src/service/function_calling.js`](src/service/function_calling.js).
+
+## Setup
+
+This frontend needs the backend running alongside it — see
+[theo-genesis-backend](https://github.com/kehinde-damascenelabs/theo-genesis-backend) for that half.
 
 ```bash
-npm start
+# 1. backend first (separate repo/terminal)
+#    see theo-genesis-backend's README — it must be up before this app can do anything
+
+# 2. this app
+npm install
+cp .env.example .env.local   # fill in real values — see comments in the file
+npm run dev                  # -> http://localhost:3001
 ```
 
-This will launch `server.js`, which handles communication with the OpenAI API.
-Open [http://localhost:3000](http://localhost:3000) in your browser to view request.
-
-### 2. Start the Frontend
-Once the backend is running, start the frontend using:
+The dev server is pinned to port 3001 because the backend's CORS allowlist is keyed off `F_LOCAL_HOST_PORT`
+(default `3001`) — a frontend on any other port gets rejected.
 
 ```bash
-npm run dev
-# or
-yarn dev
+npm run build   # production build
+npm test        # jest
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to interact with the AI voice agent.
+## Known issues
 
-### 3. Set Up Your OpenAI API Key
-Ensure you have your `OPENAI_API_KEY` configured in the `.env` file before running the project.
+- **The voice agent cannot currently start a conversation.** This is a backend problem — see
+  [theo-genesis-backend](https://github.com/kehinde-damascenelabs/theo-genesis-backend)'s README for the retired
+  OpenAI endpoint this depends on.
+- **All backend calls are hardcoded to a Railway URL** in `src/service/` and `src/utils/transcriptService.js`,
+  with the localhost alternative commented out above each one. That deployment has also been inactive since
+  November 2025. Point these at `NEXT_PUBLIC_API_BASE_URL` from `.env.local` to run against a local backend.
+- **`npm run lint` is broken** (`next lint` fails to serialize the ESLint config), and the project-root
+  `babel.config.js` — needed only for Jest — also disables Next's SWC compiler for the production build.
+- **The live demo records the visitor's microphone** and uploads it to the backend's S3 bucket on hang-up, with no
+  consent notice shown before a session starts. If you deploy this, add one first.
 
-## About This Project
-This project is built with [Next.js](https://nextjs.org), bootstrapped using [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app). It utilizes WebRTC for real-time communication with OpenAI's API.
+## About this project
 
-## Learn More
-To learn more about Next.js, check out the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - An interactive Next.js tutorial.
-- [Next.js GitHub Repository](https://github.com/vercel/next.js) - Your feedback and contributions are welcome!
-
-## Deployment
-The easiest way to deploy your Next.js app is through [Vercel](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme), the creators of Next.js.
-
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-Enjoy experimenting with this AI voice agent, and let us know your thoughts!
+Built with [Next.js](https://nextjs.org), bootstrapped from `create-next-app`.
